@@ -1,0 +1,719 @@
+---
+title: "Pikes Peak data"
+author: "Rachel Havranek"
+date: "10/9/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+Load Necessary Libraries. The plotly library, in conjunction with command ggplotly(), gives us interactive plots. can't remember what the grid library does right now.  
+```{r load libraries, message=FALSE, include = FALSE}
+library(tidyverse)
+library (plotly)
+base.directory<-"~/Documents/MSc Publication Work/R work"
+```
+
+1. Read in ZHe and AFT data that have all been formatted uniformly. Its easiest to have sample name (e.g. elevation) and then replicate parsed into 2 separate columns. This makes is easier to pull out spurious data later without having to manipulate the input file (and potentially permanently lose that data)
+```{r load data, message=FALSE, warning=FALSE}
+Pikes_Data<- read_csv("~/Documents/MSc Publication Work /R work/Pikes_Data_for_R .csv")
+Mount_Evans <- read_csv("~/Documents/MSc Publication Work /R work/Evans Data.csv") 
+Longs_Peak<- read_csv("~/Documents/MSc Publication Work /R work/Longs Peak .csv")
+AFT_Data<-read_csv("~/Documents/MSc Publication Work /R work/AFT_Data.csv")
+```
+
+# Data Wrangling
+1. Set a legend title
+2. Separate out AFT data so I can plot them separately 
+3. combine all ZHe data (includes ME ammonium data right now)
+4. Filter my Mount Evans data based on dissolution method 
+```{r  data wrangling}
+legend_title<-"Elevation (m)" 
+
+Pikes_AFT<-filter(AFT_Data, Peak=="Pikes Peak")
+Longs_AFT<-filter(AFT_Data, Peak=="Longs Peak")
+Evans_AFT<-filter(AFT_Data, Peak=="Mount Evans")
+
+ZHe_all<-bind_rows(Pikes_Data, Mount_Evans, Longs_Peak)
+```
+
+# Pikes Peak 
+This section makes plots for:   
+1. Pikes Peak Date-eU  
+2. Pikes Peak Elevation - date  
+3. Pikes Peak Elevation vs. date with each point colored by eU  
+4. Pikes Peak date vs. grain size   
+3. Pikes Peak AFT data (Kelley and Chapin, 2004)  
+```{r Plot Pikes}
+#### Date eU ####
+PP_DeU<-ggplot (data=Pikes_Data, aes(x=eU, y=date)) +  
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=22, size=4) +  
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
+  geom_vline(xintercept = 150, linetype= "dashed")  + 
+  geom_vline(xintercept = 350, linetype = "dashed") +  
+  geom_vline(xintercept = 500,linetype="dashed")  + 
+  geom_vline(xintercept = 900,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Pikes Peak" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    plot.title = element_text(size = 14, hjust = 0.5))+
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+ggsave("PP_DeU2.pdf", width=4, height = 3, units = "in", dpi=300)
+
+####Elevation Date####
+#Elevation vs. Date with each point colored by eU 
+PP_ED_byeU<-ggplot (data=Pikes_Data, aes(date, Elevation))+
+  geom_errorbarh(aes(xmin=date-uncertainty, xmax=date+uncertainty), color = 'black', height=0)+
+  geom_point(aes(fill=eU), shape=22, size=4)+
+  viridis::scale_fill_viridis(option = "viridis", limits = c(0,2000))+
+  geom_point(data=Pikes_AFT, aes(AFT_date, Elevation), pch=15, size=4)+
+  theme_classic()+
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Pikes Peak") +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(2000,4500), breaks=seq(2000, 4500, 500))+
+  theme(
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))+
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+
+#ggsave("PPelevation_date.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+####Grain Size####
+#Grain size w/ color as Elevation 
+PP_grainsize_elev<-ggplot (data=Pikes_Data, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(fill=Elevation), shape=22, size =4)+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
+  theme_classic()+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  labs(x="Grain Size", y = "Date", title = "Pikes Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA, size = 1),
+    text = element_text(size = 12),
+    legend.position = "none",
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight =2))+
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("PPdate_grain3.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+#Grain size vs. eU 
+PP_grainsize_eU<-ggplot (data=Pikes_Data, aes (Grain_size, eU))+
+  geom_errorbar(aes(ymin=eU-eU_unc, ymax=eU+eU_unc)) +
+  geom_point (aes(fill=Elevation), shape=22, size=4)+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
+  theme_classic()+
+  scale_x_continuous(expand =c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
+  scale_y_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  labs(x="Grain size (µm)", y = "eU", title = "Pikes Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("PP eU vs. r.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+####AFT#### 
+PPAFT<-ggplot(data=Pikes_AFT, aes(x=AFT_date, y=Elevation))+
+  geom_point(pch=0, size=3)+
+  geom_errorbarh(data=Pikes_AFT, aes(xmin=(AFT_date-date_error), xmax=(AFT_date+date_error), height=0))+
+  scale_x_continuous(limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(limits = c(2000,4500), breaks=seq(2000, 4500, 500)) +
+  labs(x="Date (Ma)", y="Elevation (m)") +
+  theme_classic(axis.title.x = element_text(face="bold", size=10), 
+    axis.title.y=element_text(face="bold", size=10), 
+    axis.text = element_text(colour = "black"),
+    legend.position = c(.85, 0.75))+
+#ggsave("PP_AFT.pdf", width=5.5, height = 4.5, units = "in", dpi=300) 
+
+```
+
+```{r extra pikes plots, include= FALSE}
+#Date eU of other subsets
+ramanZHe <- filter(Pikes_Data, Elevation=="2084"|Elevation=="2907"|Elevation=="3971")
+ramanZhe_deu<-ggplot (data=ramanZHe, aes(x=eU, y=date)) + 
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point(aes(colour=Sample_Name), pch=15, size=4) +  
+  scale_colour_manual(values=c("#d73037", "#fee090", "#91bfbd"))+
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_vline(xintercept = 200, linetype= "dashed")  + 
+  geom_vline(xintercept = 400, linetype= "dashed")  + 
+  geom_vline(xintercept = 600, linetype = "dashed") +  
+  geom_vline(xintercept = 1000,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Pikes Peak" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.text = element_text(size = 10), 
+    axis.text = element_text(color = "black")) +
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+    theme(plot.title = element_text(size = 14, hjust = 0.5))
+
+top3 <- filter(Pikes_Data, Sample_Name=="PP4297"|Sample_Name=="PP3971"|Sample_Name=="PP3597")
+top3_plot<-ggplot (data=top3, aes(x=eU, y=date)) +  
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_point(aes(colour=Elevation), pch=15, size=4) +  
+  scale_color_distiller(palette = "Paired", guide="legend")+
+  geom_vline(xintercept = 250, linetype= "dashed")  + 
+  #geom_vline(xintercept = 600, linetype = "dashed") +  
+  geom_vline(xintercept = 850,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Pikes Peak" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border=element_rect(fill=NA,size = 2),
+    text = element_text(size = 12),
+    legend.text = element_text(size = 10), 
+    axis.line = element_line(colour=NA),
+    axis.text = element_text(color = "black")) +
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+    theme(plot.title = element_text(size = 14, hjust = 0.5))
+
+
+top4_plot<-ggplot (data=PP_top4, aes(x=eU, y=date)) +  
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_point(aes(colour=Elevation), pch=15, size=4) +  
+  scale_color_distiller(palette = "Paired", guide="legend")+
+  geom_vline(xintercept = 250, linetype= "dashed")  + 
+  geom_vline(xintercept = 350, linetype = "dashed") + 
+  geom_vline(xintercept = 600, linetype = "dashed") +
+  geom_vline(xintercept = 850,linetype="dashed")  + 
+  geom_vline(xintercept = 1200,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Pikes Peak" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border=element_rect(fill=NA,size = 2),
+    text = element_text(size = 12),
+    legend.text = element_text(size = 10), 
+    axis.line = element_line(colour = NA),
+    axis.text = element_text(color = "black")) +
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+    theme(plot.title = element_text(size = 14, hjust = 0.5))
+
+#Elevation - Date 
+PPED<-ggplot (data=Pikes_Data, aes(x=date, y=Elevation))  + 
+  geom_point(aes(colour=Elevation), pch=19, size=4) + 
+  scale_colour_distiller(palette = "RdYlBu", direction=1)+
+  geom_errorbarh(aes(xmin=date-uncertainty, xmax=date+uncertainty), color = 'black', size=0.5, height=0) +
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Pikes Peak Elevation vs. Date" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(2000,4500), breaks=seq(2000, 4500, 500)) +
+  theme_classic()+
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.text = element_text(size = 10), 
+    axis.text = element_text(color = "black")) +
+    guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+    theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("PPelevation_date.pdf", width = 4  , height = 4, units = "in", dpi=300)
+
+
+
+
+#Grain size w/ color designation as eU 
+PP_grainsize_eU<-ggplot (data=Pikes_Data, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(colour=eU), shape=15, size=4)+
+  scale_colour_distiller(palette = "Spectral", direction = -1)  +
+  theme_classic()+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  labs(x="Grain Size", y = "Date", title = "Pikes Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.text = element_text(size = 10), 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("PPdate_grain1.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+```
+
+This chunk calculates what I want for my Hefty model 
+```{r}
+Pikes_Data <- mutate(Pikes_Data, bindata= cut(eU, c(0,150,350,500,900,2500))) #these are my bin cutoffs
+
+hefty_flatlist <- Pikes_Data %>% 
+  filter (replicate != "z32") %>% #I filtered out this daa point because its ~300 Ma younger than everything else in that bin
+  group_by(bindata) %>% 
+    summarize( 
+      N = n(),
+      RawDate_mean =  round (mean(Raw_Date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 2),
+      Rawdate_SD = round (sd(Raw_Date), digits = 2),
+      CorrDate_mean = round(mean(date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(date),digits = 2),
+      CorrDate_SD = round (sd(date), digits = 2),
+      mean_rs = round(mean(Grain_size), digits = 2),
+      U = round (mean(U), digits = 2),
+      Th = round (mean(Th), digits = 2),
+      Sm = round (mean(Sm), digits = 2),
+      eU = round (mean(eU), digits = 2),
+      He = round (mean(He), digits = 2),
+      FT = round (mean(FT), digits = 2),
+      )
+
+write.csv(hefty_flatlist, file="Pikes Hefty Flatlist.csv")
+ungroup(Pikes_Data)
+
+```
+
+This section makes plots for: 
+1. Mt. Evans Date -eU. As of 3/4/18 this plot only plots HF dissolution data (data=ME_normal). It plots on an axis from 0 to 2400 eu to best match other 2 peaks - this excludes 2 high eU dates which are captured on Me_DeU_full 
+2. A full data set inset (includes high eU data). Again, as of 3/4/18 this plot excludes NH4 dissolution data 
+3. Mt. Evans Elevation - date as of 3/17/18 this plot only plots HF dissoluaiton data (data=ME_normal)
+4. Mt evans Elevation - date (07/20/18 - only normal dissolution)
+5. Mt Evans date vs. grain size 
+6. Mt. Evans AFT 
+```{r Plot Mount Evans Data}
+####Date eU####
+#main data fram
+ME_DeU<-ggplot (data=ME_normal, aes(x=eU, y=date)) + 
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_vline(xintercept = 400, linetype = "dashed") +  
+  geom_vline(xintercept = 700,linetype="dashed")  + 
+  geom_vline(xintercept = 1600,linetype="dashed")  + 
+  geom_point(aes(fill=Elevation), pch=24, size=4) +  
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Mt. Evans" ) +  
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("MEdate_eU.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+# all data
+ME_DeU_full<-ggplot (data=ME_normal, aes(x=eU, y=date)) + 
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black') + 
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc), height=0) +
+  geom_point(aes(fill=Elevation), pch=24, size=1) +  
+  viridis::scale_fill_viridis(option = "magma",  limits = c(2000,4500))+
+  labs(x="eU (ppm)", y = "Date (Ma)") +  
+  scale_x_continuous(expand=c(0,0), limits=c(0,6600), breaks=seq(0, 6600, 3000)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 400)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=6),
+    axis.title.y= element_text(face="bold", size=6),
+    legend.text = element_text(size = 6),
+    axis.text = element_text(color = "black", size = 8), 
+    legend.position = "none"
+    )
+#ggsave("ME_full.pdf", width=1.3, height = 1, units="in")
+
+####Elevation Date####
+ME_ED_byeU<-ggplot (data=ME_normal, aes(date, Elevation))+
+  geom_errorbarh(aes(xmin=date-uncertainty, xmax=date+uncertainty), color = 'black', height=0)+
+  geom_point(aes(fill=eU), shape=24, size=3)+
+  viridis::scale_fill_viridis(option = "viridis", limits=c(0,2000))+
+  geom_point(data=Evans_AFT, aes(AFT_date, Elevation), pch=17, size=3)+
+  theme_classic()+
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Mount Evans") +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(2000,4500), breaks=seq(2000, 4500, 500))+
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=10),
+    axis.title.y= element_text(face="bold", size=10),
+    legend.text = element_text(size = 7),
+    axis.text = element_text(color = "black", size = 8), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("MEelevation_date.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+
+####Grain Size####
+#Grain size w/ color as Elevation 
+ME_grainsize_elev<-ggplot (data=ME_normal, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(fill=Elevation), shape=24, size =4)+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  theme_classic()+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  labs(x="Grain Size (µm)", y = "Date (Ma)", title = "Mt. Evans") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight =2))+
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("ME_rdate.pdf", width = 4  , height = 3, units = "in")
+
+#Grain size vs. eU
+ME_reU_full<-ggplot (data=ME_normal, aes(Grain_size, eU)) + 
+  geom_errorbar(aes(ymin=eU-eU_unc, ymax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=24, size=1) +  
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  labs(x="Grain Size (µm)", y = "eU (ppm)", title = "Grain size vs. eU" ) +  
+  scale_y_continuous(expand=c(0,0), limits=c(0,6600), breaks=seq(0, 6600, 3000)) + 
+  scale_x_continuous(expand=c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
+  theme_classic() +
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 6),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    plot.title = element_blank(),
+    axis.text = element_text(color = "black", size = 6)) +
+#ggsave("ME_reU_full.pdf", width = 1.3  , height = 1, units = "in")
+
+
+ME_reU<-ggplot (data=ME_normal, aes(Grain_size, eU)) + 
+  geom_errorbar(aes(ymin=eU-eU_unc, ymax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=24, size=4) +  
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  labs(x="Grain Size (µm)", y = "eU (ppm)", title = "Grain size vs. eU" ) +  
+  scale_y_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
+  theme_classic() +
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12),
+    plot.title = element_text(size = 14, hjust = 0.5)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+  
+#ggsave("ME_reU.pdf", width = 4  , height = 3, units = "in")
+
+####AFT####
+MEAFT<-ggplot(data=Evans_AFT, aes(x=AFT_date, y=Elevation))+
+  geom_point(pch=2, size=3)+
+  geom_errorbarh(aes(xmin=(AFT_date-date_error), xmax=(AFT_date+date_error)), height=0)+
+  scale_x_continuous(limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(limits = c(2000,4500), breaks=seq(2000, 4500, 500)) +
+  labs(x="Date (Ma)", y="Elevation (m)") +
+  theme_classic()+
+  theme(
+    axis.text = element_text(colour = "black"),
+    legend.position = c(.85, 0.75))
+#ggsave("ME_AFT.pdf", width=5.5, height = 4.5, units = "in", dpi=300)
+```
+
+```{r extra ME plots}
+MEED<-ggplot (data=ME_normal, aes(date, Elevation)) +
+   geom_errorbarh(aes(xmin=date-uncertainty, xmax=date+uncertainty), color = 'black', height=0) +
+  geom_point(aes(fill=Elevation), pch=24, size=4) + 
+  viridis::scale_fill_viridis(option = "magma")+
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Mount Evans Elevation vs. Date" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(expand =c(0,0),limits = c(2000,4500), breaks=seq(2000, 4500, 500)) +
+  theme_classic() + 
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5))
+   
+
+ME_grainsize<-ggplot (data=ME_normal, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(size=eU, colour=Elevation), shape=17)+
+  scale_size("eU")+
+  scale_colour_distiller(palette = "RdYlBu", direction = 1, guide = "legend")  +
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  theme_classic()+
+  labs(x="Grain Size (µm)", y = "Date (Ma)", title = "Mt. Evans") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    legend.text = element_text(size = 7), 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 8)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("MEgrain_date1.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+
+
+
+
+
+#This section helped me investigate where the NH4 data was in my data set. Can ignore 
+ME_NH4<-ggplot(data=ME_ammonium, aes(x=eU, y=date, fill=Sample_Name))+
+  geom_point(color="black", pch=23, size=2)+
+  scale_fill_manual(legend_title, values = c("yellow" ,"yellowgreen",  "chartreuse4", "blue2"), guide=guide_legend(reverse = TRUE)) +
+  geom_point(data=ME_normal, aes(x=eU, y=date, fill=Sample_Name), pch=2, size = 2 ) +
+  theme_classic()
+
+ME_DeUF<-ggplot (data=ME_normal, aes(x=eU, y=date, fill= Sample_Name)) + 
+  geom_point(color="black", pch=24, size=3) +  
+  scale_fill_manual(legend_title, values = c("yellow" ,"yellowgreen",  "chartreuse4", "blue2"), guide=guide_legend(reverse = TRUE)) +
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_vline(xintercept = 200, color="black", linetype="dashed") + 
+  geom_vline(xintercept = 400, color="black", linetype="dashed")  +   
+  geom_vline(xintercept = 800, color="black", linetype="dashed")  + 
+  labs(x="effective Uranium (ppm)", y = "Date (Ma)", title = "Mt. Evans" ) +  
+  scale_x_continuous(limits=c(0,6000), breaks=seq(0, 6000, 1000)) + 
+  scale_y_continuous(limits = c(0,900), breaks=seq(0, 800, 900)) +
+  theme_classic() +
+  theme(
+    axis.title.x = element_text(face="bold", size=10), 
+    axis.title.y=element_text(face="bold", size=10), 
+    axis.text = element_text(colour = "black"),
+    legend.position = c(.85, 0.75),
+    plot.title=element_text(hjust=0.5)) 
+
+ggplotly(ME_DeUF)
+
+```
+
+```{r}
+ME_normal <- mutate(ME_normal, bindata= cut(eU, c(0,400,700,1600,5100))) #these are my bin cutoffs
+
+ME_hefty_flatlist <- ME_normal %>% 
+  group_by(bindata) %>% 
+    summarize( 
+      N = n(),
+      RawDate_mean =  round (mean(Raw_Date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 2),
+      Rawdate_SD = round (sd(Raw_Date), digits = 2),
+      CorrDate_mean = round(mean(date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(date),digits = 2),
+      CorrDate_SD = round (sd(date), digits = 2),
+      mean_rs = round(mean(Grain_size), digits = 2),
+      U = round (mean(U), digits = 2),
+      Th = round (mean(Th), digits = 2),
+      Sm = round (mean(Sm), digits = 2),
+      eU = round (mean(eU), digits = 2),
+      He = round (mean(He), digits = 2),
+      FT = round (mean(FT), digits = 2),
+      )
+
+write.csv(ME_hefty_flatlist, file="Evans Hefty Flatlist.csv")
+```
+
+
+
+This section plots:
+1. LP Date eU (Johnson thesis, 2015)
+2. LP elevation date (Johnson thesis, 2015)
+3. LP AFT data (kelley and chapin, 2004)
+```{r PLot Longs Peak Data}
+####Date eU and Date Elevation####
+LP_DeU<-ggplot (data=Longs_Peak, aes(x=eU, y=date)) + 
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) +
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=23, size=4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  #geom_vline(xintercept = 200, color="black")  + geom_vline(xintercept = 600, color="black")  + geom_vline(xintercept = 1000, color="black")  + 
+  labs(x="effective Uranium (ppm)", y = "Date (Ma)", title = "Longs Peak" ) +  
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
+  theme(
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))+
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+#ggsave("LPdate_eU.pdf", width = 4  , height = 3, units = "in")
+
+
+LP_ED_byeU<-ggplot(data=Longs_Peak, aes(date, Elevation))+
+  geom_errorbarh(aes(xmin=date-uncertainty, xmax=date+uncertainty), color = 'black', height=0)+
+  geom_point(aes(fill=eU), shape=23, size=4)+
+  viridis::scale_fill_viridis(option = "viridis", limits=c(0,2000))+
+  geom_point(data=Longs_AFT, aes(AFT_date, Elevation), pch=18, size=4)+
+  theme_classic()+
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Longs Peak") +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(2000,4500), breaks=seq(2000, 4500, 500))+
+  theme(
+    panel.border = element_rect(fill=NA,  colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+#ggsave("LPelevation_date.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+####Grain Size####
+#Grain size w/ color as Elevation 
+LP_rDate<-ggplot (data=Longs_Peak, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(fill=Elevation), shape=23, size =4)+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  theme_classic()+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  labs(x="Grain Size (µm)", y = "Date (Ma)", title = "Longs Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight =2))+
+  theme(plot.title = element_text(size = 14, hjust = 0.5))
+#ggsave("LP_rDate.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+#Grain size vs. eU
+LP_reU<-ggplot (data=Longs_Peak, aes(Grain_size, eU)) + 
+  geom_errorbar(aes(ymin=eU-eU_unc, ymax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=23, size=4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  labs(x="Grain Size (µm)", y = "eU (ppm)", title = "Longs Peak" ) +  
+  scale_y_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
+  theme_classic()+
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+#ggsave("LP_reU.pdf", width = 4  , height = 3, units = "in")
+
+####AFT####
+LPAFT<-ggplot(data=Longs_AFT, aes(x=AFT_date, y=Elevation))+
+  geom_point(pch=5, size=3)+
+  geom_errorbarh(aes(xmin=(AFT_date-date_error), xmax=(AFT_date+date_error)), height=0)+
+  scale_x_continuous(limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(limits = c(2000,4500), breaks=seq(2000, 4500, 500)) +
+  labs(x="Date (Ma)", y="Elevation (m)") +
+  theme_classic()+
+  theme(
+    axis.text = element_text(colour = "black"),
+    legend.position = c(.85, 0.75))
+#ggsave("LP_AFT.pdf", width=5.5, height = 4.5, units = "in", dpi=300)
+```
+
+```{r extra LP plots}
+####Elevation Date####
+LPED<-ggplot (data=Longs_Peak, aes(x=date, y=Elevation, fill=Sample_Name)) +
+  geom_errorbarh(aes(xmin=date-uncertainty, xmax=date+uncertainty), color = 'black', height=0) +
+  geom_point(color="black", pch=23, size=3) + 
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Longs Peak" ) +  
+  scale_x_continuous(limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(limits = c(2000,4500), breaks=seq(2000, 4500, 500)) +
+   theme_classic()+
+  theme(
+    axis.title.x = element_text(face="bold", size=10), 
+    axis.title.y=element_text(face="bold", size=10), 
+    axis.text = element_text(color="black"),
+    legend.position = c(.9, 0.75),
+    plot.title=element_text(hjust=0.5))
+#ggsave("LPelevation_date.pdf", width = 5.5  , height = 4.5, units = "in", dpi=300)
+
+#Grain size w/ color designation as Elevation and size as eU 
+LP_grainsize<-ggplot (data=Longs_Peak, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(size=eU, colour=Elevation), shape=18)+
+  scale_size("eU")+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  theme_classic()+
+  labs(x="Grain Size (µm)", y = "Date (Ma)", title = "Longs Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.text = element_text(size = 10), 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    plot.title = element_text(size = 14, hjust = 0.5),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
+
+
+
+#Grain size w/ color designation as eU 
+LP_grainsize_eU<-ggplot (data=Longs_Peak, aes(Grain_size, date))+
+  geom_errorbar(aes(ymin=date-uncertainty, ymax=date+uncertainty), color = 'black', width=.1) + 
+  geom_point (aes(fill=eU), shape=23, size=4)+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  theme_classic()+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  labs(x="Grain Size (µm)", y = "Date (Ma)", title = "Longs Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) +
+  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+  
+#ggsave("LPdate_grain_eU.pdf", width = 4  , height = 3, units = "in", dpi=300)
+
+
+```
+
