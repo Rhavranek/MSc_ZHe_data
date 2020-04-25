@@ -241,7 +241,7 @@ Pikes_hefty<- ggplot () +
   scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200))
 
-
+print ("This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is")
 ggplotly(Pikes_hefty, dynamicTicks = TRUE)  
 print(Pikes_hefty)
 
@@ -410,7 +410,7 @@ ME_reU<-ggplot (data=Mount_Evans, aes(r, eU)) +
   guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
 
 #Print all plots   
-print(Me_DeU)
+print(ME_DeU)
 print (ME_DeU_full)
 print (ME_ED_byeU)
 print (ME_relev)
@@ -473,20 +473,237 @@ ungroup(Mount_Evans)
 ```{r, echo = FALSE, warning= FALSE}
 Evans_hefty<- ggplot () + 
   geom_point(data=Mount_Evans %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = Sample, text = Grain, ), fill = 'gray60', pch=22, size=4) + 
-  geom_errorbar(data = ME_hefty_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1, size = 0.01) +
+  geom_errorbar(data = ME_hefty_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1) +
   geom_point(data = ME_hefty_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
   geom_vline(xintercept = 400, linetype= "dashed")  + 
   geom_vline(xintercept = 700, linetype = "dashed") +  
   geom_vline(xintercept = 1600,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "Date (Ma)") 
 
+print ("This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is")
 ggplotly(Evans_hefty, dynamicTicks = TRUE)  
 print(Evans_hefty)
 
 ```
 
 
+
+
+
+
 # Longs Peak 
 ### Load and Manipulate Data
+```{r}
+Longs_Peak <- read.csv("data/Longs_Peak.csv")
+
+#Rename sample to match other peak schema 
+Longs_Peak <- Longs_Peak %>% mutate (
+  papername = ifelse (Sample == "LP1", "LP7",
+                ifelse (Sample == "LP2", "LP6",
+                  ifelse (Sample == "LP3", "LP5",
+                    ifelse (Sample == "LP4", "LP4",
+                      ifelse (Sample == "LP7", "LP3",
+                          ifelse(Sample == "LP5", "LP2", "LP1")
+                      )
+                    )
+                  )
+                )
+              )
+  )
+
+# Add in column with sample elevation
+Longs_Peak <- Longs_Peak %>% mutate (
+  Elevation = ifelse (Sample == "LP1", 4343,
+                ifelse (Sample == "LP2", 4121,
+                  ifelse (Sample == "LP3", 4023,
+                    ifelse (Sample == "LP4", 3688,
+                      ifelse (Sample == "LP7", 3500,
+                          ifelse(Sample == "LP5", 3383, 2835)
+                      )
+                    )
+                  )
+                )
+              )
+  )                            
+```
+
 ### Plots 
+
+```{r LP Plots, echo=FALSE, warning=FALSE}
+
+# Date vs. eU, with data points colored by Elevation
+LP_DeU<-ggplot (data=Longs_Peak, aes(x=eU, y=Corr_Date)) + 
+  geom_errorbar(aes(ymin=Corr_Date-Corr_Date_unc, ymax=Corr_Date+Corr_Date_unc), color = 'black', width=.1) +
+  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=23, size=4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  geom_vline(xintercept = 500, linetype = "dashed") + 
+  geom_vline(xintercept = 1000, linetype = "dashed")  + 
+  geom_vline(xintercept = 1500, linetype = "dashed")  + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
+  theme(
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
+
+
+# Longs Peak Elevation vs. Date, colored by eU 
+LP_ED_byeU<-ggplot(data=Longs_Peak, aes(Corr_Date, Elevation))+
+  geom_errorbarh(aes(xmin=Corr_Date-Corr_Date_unc, xmax=Corr_Date+Corr_Date_unc), color = 'black', height=0)+
+  geom_point(aes(fill=eU), shape=23, size=4)+
+  viridis::scale_fill_viridis(option = "viridis", limits=c(0,2000))+
+  geom_point(data=AFT_data %>% filter (Peak == "Longs Peak"), aes(AFT_date, Elevation), pch=18, size=4)+
+  theme_classic()+
+  labs(x="Date (Ma)", y = "Elevation (m)", title = "Longs Peak") +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(2000,4500), breaks=seq(2000, 4500, 500))+
+  theme(
+    panel.border = element_rect(fill=NA,  colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = c(.9, 0.75),
+    plot.title = element_text(size = 14, hjust = 0.5)) 
+
+
+# Date vs. rs, with points colored by elevation
+LP_rDate<-ggplot (data=Longs_Peak, aes(r, Corr_Date))+
+  geom_errorbar(aes(ymin=Corr_Date-Corr_Date_unc, ymax=Corr_Date+Corr_Date_unc), color = 'black', width=.1) + 
+  geom_point (aes(fill=Elevation), shape=23, size =4)+
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  theme_classic()+
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
+  labs(x="Grain Size (µm)", y = "Date (Ma)", title = "Longs Peak") +  
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12),
+    plot.title = element_text(size = 14, hjust = 0.5)) 
+
+
+# eU vs. rs, with points colored by elevation
+LP_reU<-ggplot (data=Longs_Peak, aes(r, eU)) + 
+  geom_errorbar(aes(ymin=eU-eU_unc, ymax=eU+eU_unc)) +
+  geom_point(aes(fill=Elevation), pch=23, size=4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
+  labs(x="Grain Size (µm)", y = "eU (ppm)", title = "Longs Peak" ) +  
+  scale_y_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
+  theme_classic()+
+  theme(
+    panel.border=element_rect(fill=NA,size = 1),
+    text = element_text(size = 12),
+    legend.position = "none", 
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.text = element_text(color = "black", size = 12)) 
+
+print (LP_DeU)
+print(LP_ED_byeU)
+print (LP_rDate)
+print(LP_reU)
+
+
+```
+
+
 ### Hefty Outputs
+Here, I've chosen to exclude the grain from LP 1 with a date of 137 ma, beucase it is an outlier from the rest of the data 
+###### Option #1 
+This grouping takes into account the 'populations' approach, it groups grains based on eU into what visually look like clusters
+**4 Bins:**  
+*0 - 500 (4 grains)  
+*500 - 900 (2 grains)  
+*900 - 1600 (7 grains)  
+*1600 - 2400 (2 grains)
+
+
+###### Option #2: 
+This grouping is tempting becuase it takes the first three bins of Pikes Peak, collapses them into 1, and then uses the same boundaries as bins 4 and 5 
+**3 Bins:**
+*0 - 500 (4 grains)
+*500 - 9000 (2 grains)  
+*900 - 2000 (9 grains)
+
+###### Option #3: 
+Even eU bins - I think this makes the most sense in some ways for this distribution, because it honors 'clusters' for the most part, and evenly divides the eU space. Downside: it is not particularly similar to either of the groupings from the other peaks 
+**4 Bins:**
+*0 - 500 (4 grains)
+*500 - 1000 (3 grains)  
+*1000 - 1500 (6 grains)
+*1500 - 2000 (2 grains)
+
+
+None of these options really meaningfully change the average dates or the uncertainties (either 15% or s.d.) in each resepctive bin. 
+```{r}
+grains.not.modeled <- c(1)
+
+Longs_Peak <- Longs_Peak %>%  
+  mutate( 
+    Rownumber= row_number(),
+    Donotuse = (Rownumber %in% grains.not.modeled),
+    bindata= cut(eU, c(0,500, 1000, 1500, 2200)) #these are my bin cutoffs
+  ) 
+```
+
+Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
+
+```{r, echo = FALSE}
+LP_hefty_flatlist <- Longs_Peak %>% 
+  filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize( 
+      N = n(),
+      RawDate_mean =  round (mean(Raw_Date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 2),
+      Rawdate_SD = round (sd(Raw_Date), digits = 2),
+      CorrDate_mean = round(mean(Corr_Date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
+      CorrDate_SD = round (sd(Corr_Date), digits = 2),
+      mean_rs = round(mean(r), digits = 2),
+      U = round (mean(U), digits = 2),
+      Th = round (mean(Th), digits = 2),
+      eU = round (mean(eU), digits = 2),
+      He = round (mean(He), digits = 2),
+      FT = round (mean(FT), digits = 2),
+      )
+
+print(LP_hefty_flatlist)
+write.csv(LP_hefty_flatlist, file="data_output/Evans Hefty Flatlist.csv")
+```
+
+```{r, include = FALSE}
+#If you need to manipulate the Pikes Peak Data more after this code chunk, you should ungroup it - but I have this line commented out, becuase I don't like that it prints all the data again 
+ungroup(Longs_Peak) 
+```
+
+```{r, echo = FALSE, warning= FALSE}
+Longs_hefty<- ggplot () + 
+  geom_errorbar(data = LP_hefty_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_point(data=Longs_Peak %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data = LP_hefty_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+  geom_vline(xintercept = 500, linetype= "dashed")  + 
+  geom_vline(xintercept = 1000, linetype = "dashed") +  
+  geom_vline(xintercept = 1500,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)") 
+
+print ("This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is")
+ggplotly(Longs_hefty, dynamicTicks = TRUE)  
+print(Longs_hefty)
+
+```
