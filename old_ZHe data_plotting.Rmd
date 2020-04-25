@@ -68,7 +68,7 @@ PP_DeU<-ggplot (data=Pikes_Data, aes(x=eU, y=date)) +
     axis.text = element_text(color = "black", size = 10), 
     plot.title = element_text(size = 14, hjust = 0.5))+
   guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
-ggsave("PP_DeU2.pdf", width=4, height = 3, units = "in", dpi=300)
+
 
 ####Elevation Date####
 #Elevation vs. Date with each point colored by eU 
