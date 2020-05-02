@@ -44,8 +44,11 @@ Pikes_Data <- Pikes_Data %>%
 
 ### Plots
 This section makes plots for:   
-1. Pikes Peak Elevation - date  
+1. Pikes Peak Elevation - date
+
 2. Pikes Peak Date-eU  
+  May 01, 2020 -- Becky and I decided to use a grey scale for the lowest three elevation samples for the Pikes Peak samples. We chose to do this because those data were previously published in Flowers et al., 2020 PNAS. I have not changed the code here, but instead I have just manually changed the colors in illustrator. I chose this approach becuase it is very hard to add two different color scales to a ggplot (they've done that on purpose).
+
 3. Pikes Peak Elevation vs. date with each point colored by eU  
 4. Pikes Peak date vs. grain size   
 3. Pikes Peak AFT data (Kelley and Chapin, 2004)  
@@ -161,16 +164,30 @@ print(PP_grainsize_eU)
 
 ```
 
+
 ### Hefty Inputs 
 **Grains excluded from models:**  
   * Sample: PP1, grain:Z32, rownumber: 6 - this grain has an eU of 151.5 and a date of 312.9, which is ~ 300 Ma younger than grains w/ comprable eU
   
-** I have divided by data into 5 bins with roughly equal number of grains:**
+We have setaparated the data into two groups for modeling - below 3500 m, and above 3500 m. This separates the data that were previously published by Flowers et al., 2020 PNAS, with the new data presented here. We have chosen the same elevation cutoff for separting the three datasets for all three peaks. The bins I have here mimic those in Flowers et al., 2020 PNAS. 
+
+*Bins:*  
+*0 - 100 ppm  
+*100 - 250 ppm   
+*250 - 500 ppm  
+*500 - 1000 ppm  
+*1000 - 2500 ppm  
+  
+  
+*Previously tried data binning methods:*  
+This approach was disgarded because we decided to model the data in two groups  
+
+I have divided by data into 5 bins with roughly equal number of grains:
 * 0 - 150 ppm (7 grains)
 * 150 - 350 ppm (6 grains)
 * 350 - 500 ppm (6 grains)
 * 500 - 900 ppm (7 grains)
-* 900 - 2000 ppm (5 grains)
+* 900 - 2500 ppm (5 grains)
 
 I have chosen to model all of the samples together because they form a singular date-eU trend. I like the bins I have chosen here becuase I think they accurately capture the overall date - eU span.
 - 670.04, eU = 102.46  
@@ -179,11 +196,7 @@ I have chosen to model all of the samples together because they form a singular 
 - 264.16, eU = 676.41  
 - 140.76, eU = 1323.12  
 
-One potential way to change this would be to take out the second bin (so there are 4 bins total), and make that bin slightly larger (i.e. 0 - 200, and then make the second bin 200 to 500). I didn't choose that approach here becuase that would make the first two bins have 9 and 10 grains, respecively, while the next two bins would have 7 and 5. (But maybe that's not so bad). 
-- 676.93, eU = 120.09  
-- 469.26, eU = 382.64 -> this is an intermediate between bins 2 and 3 above, all in all I don't think it would alter the model that much because its errorbars are so big
-- 264.16, eU = 676.41  
-- 140.76, eU = 1323.12  
+ 
 
 ```{r}
 grains.not.modeled <- c(6)
@@ -192,35 +205,56 @@ Pikes_Data <- Pikes_Data %>%
   mutate( 
     Rownumber= row_number(),
     Donotuse = (Rownumber %in% grains.not.modeled),
-    bindata= cut(eU, c(0,150, 350,500,900,2500)) #these are my bin cutoffs
+    bindata= cut(eU, c(0,100, 250,500,1000,2500)) #these are my bin cutoffs
   ) 
 ```
 
 Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
 
 ```{r, echo = FALSE}
-hefty_flatlist <- Pikes_Data %>% 
-  filter (!Donotuse) %>% 
+Pikes_lowelevation_hefty <- Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3") %>% filter (!Donotuse) %>% 
   group_by(bindata) %>% 
     summarize( 
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      Sm = round (mean(Sm), digits = 1),
+      RawDate_mean =  round (mean(Raw_Date), digits = 1),
+      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 1),
+      Rawdate_SD = round (sd(Raw_Date), digits = 1),
+      mean_rs = round(mean(Grain_size), digits = 1),
+      CorrDate_mean = round(mean(date), digits = 1),
+      CorrDate_15percent = round(0.15*mean(date),digits = 1),
+      CorrDate_SD = round (sd(date), digits = 1),
       N = n(),
-      RawDate_mean =  round (mean(Raw_Date), digits = 2),
-      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 2),
-      Rawdate_SD = round (sd(Raw_Date), digits = 2),
-      CorrDate_mean = round(mean(date), digits = 2),
-      CorrDate_15percent = round(0.15*mean(date),digits = 2),
-      CorrDate_SD = round (sd(date), digits = 2),
-      mean_rs = round(mean(Grain_size), digits = 2),
-      U = round (mean(U), digits = 2),
-      Th = round (mean(Th), digits = 2),
-      Sm = round (mean(Sm), digits = 2),
-      eU = round (mean(eU), digits = 2),
-      He = round (mean(He), digits = 2),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
       FT = round (mean(FT), digits = 2),
       )
 
-print(hefty_flatlist)
-write.csv(hefty_flatlist, file="data_output/Pikes Hefty Flatlist.csv")
+print(Pikes_lowelevation_hefty)
+write.csv(Pikes_lowelevation_hefty , file="data_output/Pikes Low Elevation Hefty Flatlist.csv")
+
+Pikes_highelevation_hefty <- Pikes_Data %>% filter (papername != "PP1" & papername != "PP2" & papername != "PP3") %>% filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize( 
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      Sm = round (mean(Sm), digits = 1),
+      RawDate_mean =  round (mean(Raw_Date), digits = 1),
+      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 1),
+      Rawdate_SD = round (sd(Raw_Date), digits = 1),
+      mean_rs = round(mean(Grain_size), digits = 1),
+      CorrDate_mean = round(mean(date), digits = 1),
+      CorrDate_15percent = round(0.15*mean(date),digits = 1),
+      CorrDate_SD = round (sd(date), digits = 1),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 2),
+      )
+
+print(Pikes_highelevation_hefty)
+write.csv(Pikes_highelevation_hefty, file="data_output/Pikes High Elevation Hefty Flatlist.csv")
 ```
 
 ```{r, include = FALSE}
@@ -228,27 +262,64 @@ write.csv(hefty_flatlist, file="data_output/Pikes Hefty Flatlist.csv")
 ungroup(Pikes_Data) 
 ```
 
+This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is
 ```{r, echo = FALSE, warning= FALSE}
-Pikes_hefty<- ggplot () + 
-  geom_point(data=Pikes_Data %>% filter (!Donotuse), aes( x=eU, y=date, label = papername, text = replicate, ), fill = 'gray60', pch=22, size=4, ) + 
-  geom_errorbar(data = hefty_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1, size = 0.01) +
-  geom_point(data = hefty_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
-  geom_vline(xintercept = 150, linetype= "dashed")  + 
-  geom_vline(xintercept = 350, linetype = "dashed") +  
+Pikes_lowelevation_heftyplt<- ggplot () + 
+  geom_point(data=Pikes_Data %>% filter (!Donotuse) %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3"), aes( x=eU, y=date, label = papername, text = replicate, ), fill = 'gray60', pch=22, size=4, ) + 
+  geom_errorbar(data = Pikes_lowelevation_hefty, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1) +
+  geom_point(data = Pikes_lowelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+  geom_vline(xintercept = 100, linetype= "dashed")  + 
+  geom_vline(xintercept = 250, linetype = "dashed") +  
   geom_vline(xintercept = 500,linetype="dashed")  + 
-  geom_vline(xintercept = 900,linetype="dashed")  + 
-  labs(x="eU (ppm)", y = "Date (Ma)" ) +  
+  geom_vline(xintercept = 1000,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "PP1, PP2 and PP3 Hefty Modeling Bins" ) +  
   scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
-  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200))
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
+  theme(
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10),
+   plot.title = element_text(size = 14, hjust = 0.5))
 
-print ("This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is")
-ggplotly(Pikes_hefty, dynamicTicks = TRUE)  
-print(Pikes_hefty)
+ggplotly(Pikes_lowelevation_heftyplt, dynamicTicks = TRUE)  
+print(Pikes_lowelevation_heftyplt)
 
 ```
 
 
+This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is
+```{r, echo = FALSE, warning= FALSE}
+Pikes_highelevation_heftyplt<- ggplot () + 
+  geom_point(data=Pikes_Data %>% filter (!Donotuse) %>% filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=date, label = papername, text = replicate, ), fill = 'gray60', pch=22, size=4, ) + 
+  geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1) +
+  geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+  geom_vline(xintercept = 100, linetype= "dashed")  + 
+  geom_vline(xintercept = 250, linetype = "dashed") +  
+  geom_vline(xintercept = 500,linetype="dashed")  + 
+  geom_vline(xintercept = 1000,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)",  title = "PP4, PP5 and PP6 Hefty Modeling Bins" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
+  theme(
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10),
+   plot.title = element_text(size = 14, hjust = 0.5))
 
+ggplotly(Pikes_highelevation_heftyplt, dynamicTicks = TRUE)  
+print(Pikes_highelevation_heftyplt)
+
+```
 
 
 
@@ -420,49 +491,89 @@ print (ME_reU_full)
 
 
 ### Hefty Outputs
+Here I have separated the Mount Evans data into below 3500 m, and above 3500 m. I separted it like this becuase it looks like the bottom sample (ME1) has a different date-eU trend than the other three samples. Additonally, Bryant and Naeser (1980) documented a 'roll-over' to older AFT dates at an elevation of approximatley 3500 m, and so it reasonable to expect that samples at low elevation experienced a slightly different thermal history than the high elevation samples. 
 
-For this sample I've chosen to use differnt bins than the Pikes Peak samples - but I've used similar, but slightly different guiding principles. In particular I tried to 'lump' groups of grains together, so that my averages center in what look like distinct populations.    
-**Bins:**  
+**ME1 Bins:**  
+*0 - 250 ppm  
+*250 - 500 ppm  
+*500 - 1000 ppm   
+
+**ME2, ME3, ME4 Bins:**  
+*Excluded the two high-eU grains, becuase the kineteic model can't really deal with those data points  
+*0 - 450 ppm -- we slightly altered the boundary of this bin as compared to all other bins to capture the grain from ME4, with an eU of 489.1 ppm and a date of 363.0 which pretty clearly falls into the higher eU population
+*450 - 1000 ppm
+*1000 - 2000 
+
+*Older separation:*
+Bins:  
 * 0 - 400 (9 grains)  
 * 400 - 700 (8 grains)  
 * 700 - 1600 (5 grains)  
 * 1600 - 5100 (2 grains)
+
+Hefty outputs for the lowest sample: 
+```{r, echo=FALSE}
+ME1_flatlist <- Mount_Evans %>% filter (Sample == "ME1_2872") %>% 
+  mutate(bindata= cut(eU, c(0,250, 500,1000))) %>%  #these are my bin cutoffs
+  group_by(bindata) %>% 
+    summarize( 
+      U = round (mean(U, na.rm = FALSE), digits = 1),
+      Th = round (mean(Th, na.rm = FALSE), digits = 1),
+      Sm = round (mean(Sm, na.rm = FALSE), digits = 1),
+      RawDate_mean =  round (mean(Raw_date, na.rm = FALSE), digits = 1),
+      Rawdate_15percent = round (0.15*mean(Raw_date, na.rm = FALSE), digits = 1),
+      Rawdate_SD = round (sd(Raw_date, na.rm = FALSE), digits = 1),
+      mean_rs = round(mean(r, na.rm = FALSE), digits = 1),
+      CorrDate_mean = round(mean(Corr_Date, na.rm = FALSE), digits = 1),
+      CorrDate_15percent = round(0.15*mean(Corr_Date, na.rm = FALSE),digits = 1),
+      CorrDate_SD = round (sd(Corr_Date, na.rm = FALSE), digits = 1),
+      N = n(),
+      eU = round (mean(eU, na.rm = FALSE), digits = 1),
+      He = round (mean(He, na.rm = FALSE), digits = 1),
+      FT = round (mean(FT, na.rm = FALSE), digits = 2),
+      )
+
+print(ME1_flatlist)
+write.csv(ME1_flatlist, file="data_output/ME1 Hefty Flatlist.csv")
+```
+
+
 ```{r}
-grains.not.modeled <- c()
+grains.not.modeled <- c(13, 15) #removes grains with an eU of 5086.6 ppm and 3871.2 ppm, respectively  
 
 Mount_Evans <- Mount_Evans %>%  
   mutate( 
     Rownumber= row_number(),
     Donotuse = (Rownumber %in% grains.not.modeled),
-    bindata= cut(eU, c(0,400, 700,1600,5100)) #these are my bin cutoffs
+    bindata= cut(eU, c(0,450, 1000,2000)) #these are my bin cutoffs
   ) 
 ```
 
 Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
 
 ```{r, echo = FALSE}
-ME_hefty_flatlist <- Mount_Evans %>% 
+ME_highelevation_flatlist <- Mount_Evans %>% filter (Sample != "ME1_2872") %>% 
   filter (!Donotuse) %>% 
   group_by(bindata) %>% 
     summarize( 
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      Sm = round (mean(Sm), digits = 1),
+      mean_rs = round(mean(r), digits = 1),
+      RawDate_mean =  round (mean(Raw_date), digits = 1),
+      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 1),
+      Rawdate_SD = round (sd(Raw_date), digits = 1),
+      CorrDate_mean = round(mean(Corr_Date), digits = 1),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
+      CorrDate_SD = round (sd(Corr_Date), digits = 1),
       N = n(),
-      RawDate_mean =  round (mean(Raw_date), digits = 2),
-      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 2),
-      Rawdate_SD = round (sd(Raw_date), digits = 2),
-      CorrDate_mean = round(mean(Corr_Date), digits = 2),
-      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
-      CorrDate_SD = round (sd(Corr_Date), digits = 2),
-      mean_rs = round(mean(r), digits = 2),
-      U = round (mean(U), digits = 2),
-      Th = round (mean(Th), digits = 2),
-      Sm = round (mean(Sm), digits = 2),
       eU = round (mean(eU), digits = 2),
       He = round (mean(He), digits = 2),
       FT = round (mean(FT), digits = 2),
       )
 
-print(ME_hefty_flatlist)
-write.csv(ME_hefty_flatlist, file="data_output/Evans Hefty Flatlist.csv")
+print(ME_highelevation_flatlist)
+write.csv(ME_highelevation_flatlist, file="data_output/Evans High Elevation Hefty Flatlist.csv")
 ```
 
 ```{r, include = FALSE}
@@ -470,20 +581,60 @@ write.csv(ME_hefty_flatlist, file="data_output/Evans Hefty Flatlist.csv")
 ungroup(Mount_Evans) 
 ```
 
-```{r, echo = FALSE, warning= FALSE}
-Evans_hefty<- ggplot () + 
-  geom_point(data=Mount_Evans %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = Sample, text = Grain, ), fill = 'gray60', pch=22, size=4) + 
-  geom_errorbar(data = ME_hefty_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1) +
-  geom_point(data = ME_hefty_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
-  geom_vline(xintercept = 400, linetype= "dashed")  + 
-  geom_vline(xintercept = 700, linetype = "dashed") +  
-  geom_vline(xintercept = 1600,linetype="dashed")  + 
-  labs(x="eU (ppm)", y = "Date (Ma)") 
+This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is
+```{r Low Elevation Mount Evans, echo = FALSE, warning= FALSE}
+ME1_Hefty<- ggplot () + 
+  geom_point(data=Mount_Evans %>% filter (Sample == "ME1_2872"), aes(x=eU, y=Corr_Date, label = Sample, text = Grain, ), fill = 'gray60', pch=22, size=4) + 
+  geom_errorbar(data = ME1_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_point(data = ME1_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+  geom_vline(xintercept = 250, linetype= "dashed")  + 
+  geom_vline(xintercept = 500, linetype = "dashed") +  
+  geom_vline(xintercept = 1000,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Mount Evans < 3500 m (ME1)")  +
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
 
-print ("This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is")
-ggplotly(Evans_hefty, dynamicTicks = TRUE)  
-print(Evans_hefty)
 
+ggplotly(ME1_Hefty, dynamicTicks = TRUE)  
+print(ME1_Hefty)
+
+```
+
+```{r High Elevation Mount Evans, echo = FALSE, warning= FALSE}
+Evans_highelevation_hefty<- ggplot () + 
+  geom_point(data = Mount_Evans %>% filter (Sample != "ME1_2872") %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = Sample, text = Grain), fill = 'gray60', pch=22, size=4)+ 
+  geom_errorbar(data = ME_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_point(data = ME_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+  geom_vline(xintercept = 450, linetype = "dashed") +  
+  geom_vline(xintercept = 1000,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "Date (Ma)", title = "Mount Evans > 3500 m")  +
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
+
+ggplotly(Evans_highelevation_hefty, dynamicTicks = TRUE)
+print (Evans_highelevation_hefty)
 ```
 
 
@@ -623,87 +774,137 @@ print(LP_reU)
 
 
 ### Hefty Outputs
-Here, I've chosen to exclude the grain from LP 1 with a date of 137 ma, beucase it is an outlier from the rest of the data 
-###### Option #1 
-This grouping takes into account the 'populations' approach, it groups grains based on eU into what visually look like clusters
-**4 Bins:**  
-*0 - 500 (4 grains)  
-*500 - 900 (2 grains)  
-*900 - 1600 (7 grains)  
-*1600 - 2400 (2 grains)
+
+Just like the other two peaks, I've divided this dataset into a low elevation (<= 3500 m), and high elevation (>3500 m) groups. 
 
 
-###### Option #2: 
-This grouping is tempting becuase it takes the first three bins of Pikes Peak, collapses them into 1, and then uses the same boundaries as bins 4 and 5 
-**3 Bins:**
-*0 - 500 (4 grains)
-*500 - 9000 (2 grains)  
-*900 - 2000 (9 grains)
-
-###### Option #3: 
 Even eU bins - I think this makes the most sense in some ways for this distribution, because it honors 'clusters' for the most part, and evenly divides the eU space. Downside: it is not particularly similar to either of the groupings from the other peaks 
 **4 Bins:**
-*0 - 500 (4 grains)
-*500 - 1000 (3 grains)  
-*1000 - 1500 (6 grains)
-*1500 - 2000 (2 grains)
+*0 - 500 
+*500 - 1000  
+*1000 - 2200
+
 
 
 None of these options really meaningfully change the average dates or the uncertainties (either 15% or s.d.) in each resepctive bin. 
 ```{r}
-grains.not.modeled <- c(1)
+grains.not.modeled <- c()
 
 Longs_Peak <- Longs_Peak %>%  
   mutate( 
     Rownumber= row_number(),
     Donotuse = (Rownumber %in% grains.not.modeled),
-    bindata= cut(eU, c(0,500, 1000, 1500, 2200)) #these are my bin cutoffs
+    bindata= cut(eU, c(0,500, 1000, 2500)) #these are my bin cutoffs
   ) 
 ```
 
 Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
 
 ```{r, echo = FALSE}
-LP_hefty_flatlist <- Longs_Peak %>% 
+LP_highelevation_flatlist <- Longs_Peak %>% filter (Elevation > 3500) %>% 
   filter (!Donotuse) %>% 
   group_by(bindata) %>% 
-    summarize( 
-      N = n(),
+    summarize(
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
       RawDate_mean =  round (mean(Raw_Date), digits = 2),
       Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 2),
       Rawdate_SD = round (sd(Raw_Date), digits = 2),
+      mean_rs = round(mean(r), digits = 2),
       CorrDate_mean = round(mean(Corr_Date), digits = 2),
       CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
       CorrDate_SD = round (sd(Corr_Date), digits = 2),
-      mean_rs = round(mean(r), digits = 2),
-      U = round (mean(U), digits = 2),
-      Th = round (mean(Th), digits = 2),
-      eU = round (mean(eU), digits = 2),
-      He = round (mean(He), digits = 2),
-      FT = round (mean(FT), digits = 2),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 1),
       )
 
-print(LP_hefty_flatlist)
-write.csv(LP_hefty_flatlist, file="data_output/Evans Hefty Flatlist.csv")
+print(LP_highelevation_flatlist)
+write.csv(LP_highelevation_flatlist, file="data_output/Longs High Elevation Hefty Flatlist.csv")
 ```
+
+```{r, echo = FALSE}
+LP_lowelevation_flatlist <- Longs_Peak %>% filter (Elevation <= 3500) %>% 
+  filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize(
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      RawDate_mean =  round (mean(Raw_Date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Raw_Date), digits = 2),
+      Rawdate_SD = round (sd(Raw_Date), digits = 2),
+      mean_rs = round(mean(r), digits = 2),
+      CorrDate_mean = round(mean(Corr_Date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
+      CorrDate_SD = round (sd(Corr_Date), digits = 2),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 1),
+      )
+
+print(LP_lowelevation_flatlist)
+write.csv(LP_lowelevation_flatlist, file="data_output/Longs Low Elevation Hefty Flatlist.csv")
+```
+
 
 ```{r, include = FALSE}
 #If you need to manipulate the Pikes Peak Data more after this code chunk, you should ungroup it - but I have this line commented out, becuase I don't like that it prints all the data again 
 ungroup(Longs_Peak) 
 ```
 
+
 ```{r, echo = FALSE, warning= FALSE}
-Longs_hefty<- ggplot () + 
-  geom_errorbar(data = LP_hefty_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
-  geom_point(data=Longs_Peak %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
-  geom_point(data = LP_hefty_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+Longs_highelevation_hefty<- ggplot () + 
+  geom_errorbar(data = LP_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation >3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data = LP_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
-  geom_vline(xintercept = 1500,linetype="dashed")  + 
-  labs(x="eU (ppm)", y = "Date (Ma)") 
+  labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation >3500 m") +
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
 
-print ("This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is")
-ggplotly(Longs_hefty, dynamicTicks = TRUE)  
-print(Longs_hefty)
 
+ggplotly(Longs_highelevation_hefty, dynamicTicks = TRUE)  
+print(Longs_highelevation_hefty)
+```
+
+```{r, echo = FALSE, warning= FALSE}
+Longs_lowelevation_hefty<- ggplot () + 
+  geom_errorbar(data = LP_lowelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation  <= 3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data = LP_lowelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'darkgreen') +
+  geom_vline(xintercept = 500, linetype= "dashed")  + 
+  geom_vline(xintercept = 1000, linetype = "dashed") +  
+  labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation <= 3500 m") +
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
+
+
+ggplotly(Longs_lowelevation_hefty, dynamicTicks = TRUE)  
+print(Longs_lowelevation_hefty)
 ```
