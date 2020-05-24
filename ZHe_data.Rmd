@@ -216,6 +216,7 @@ Pikes_Data <- Pikes_Data %>%
 
 Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
 
+
 ```{r, echo = FALSE}
 Pikes_lowelevation_hefty <- Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3") %>% filter (!Donotuse) %>% 
   group_by(bindata) %>% 
@@ -230,6 +231,7 @@ Pikes_lowelevation_hefty <- Pikes_Data %>% filter (papername == "PP1" | papernam
       CorrDate_mean = round(mean(Corr_Date), digits = 1),
       CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
       CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
       eU = round (mean(eU), digits = 1),
       He = round (mean(He), digits = 1),
@@ -252,6 +254,7 @@ Pikes_highelevation_hefty <- Pikes_Data %>% filter (papername != "PP1" & paperna
       CorrDate_mean = round(mean(Corr_Date), digits = 1),
       CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
       CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
       eU = round (mean(eU), digits = 1),
       He = round (mean(He), digits = 1),
@@ -272,12 +275,12 @@ This is a dynamic plot that can be zoomed in on, and if you hover over a data po
 ```{r, echo = FALSE, warning= FALSE}
 Pikes_lowelevation_heftyplt<- ggplot () + 
   geom_point(data=Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3"), aes(x=eU, y=Corr_Date, label = papername, text = Grain),  fill = 'gray60', pch=22, size=4) + 
-  geom_errorbar(data = Pikes_lowelevation_hefty, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1) +
+  geom_errorbar(data = Pikes_lowelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_lowelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue')+
   geom_vline(xintercept = 250, linetype = "dashed") +  
   geom_vline(xintercept = 500,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
-  labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Pikes Peak low elevation (< 3500)" ) +  
+  labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Pikes Peak Low Elevation Samples (< 3500 m)" ) +  
   scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
@@ -299,12 +302,12 @@ This is a dynamic plot that can be zoomed in on, and if you hover over a data po
 ```{r, echo = FALSE, warning= FALSE}
 Pikes_highelevation_heftyplt<- ggplot () + 
   geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
-  geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1) +
+  geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
   geom_vline(xintercept = 250, linetype = "dashed") +  
   geom_vline(xintercept = 500,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
-  labs(x="eU (ppm)", y = "ZHe Date (Ma)",  title = "Pikes Peak > 3500 m" ) +  
+  labs(x="eU (ppm)", y = "ZHe Date (Ma)",  title = "Pikes Peak High Elevation Samples (>3500 m" ) +  
   scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
@@ -533,6 +536,7 @@ ME1_flatlist <- Mount_Evans %>% filter (Sample == "ME1_2872") %>%
       CorrDate_mean = round(mean(Corr_Date, na.rm = FALSE), digits = 1),
       CorrDate_15percent = round(0.15*mean(Corr_Date, na.rm = FALSE),digits = 1),
       CorrDate_SD = round (sd(Corr_Date, na.rm = FALSE), digits = 1),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
       eU = round (mean(eU, na.rm = FALSE), digits = 1),
       He = round (mean(He, na.rm = FALSE), digits = 1),
@@ -572,6 +576,7 @@ ME_highelevation_flatlist <- Mount_Evans %>% filter (Sample != "ME1_2872") %>%
       CorrDate_mean = round(mean(Corr_Date), digits = 1),
       CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
       CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
       eU = round (mean(eU), digits = 2),
       He = round (mean(He), digits = 2),
@@ -591,7 +596,7 @@ This is a dynamic plot that can be zoomed in on, and if you hover over a data po
 ```{r Low Elevation Mount Evans, echo = FALSE, warning= FALSE}
 ME1_Hefty<- ggplot () + 
   geom_point(data=Mount_Evans %>% filter (Sample == "ME1_2872"), aes(x=eU, y=Corr_Date, label = Sample, text = Grain, ), fill = 'gray60', pch=24, size=4) + 
-  geom_errorbar(data = ME1_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_errorbar(data = ME1_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data = ME1_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
   geom_vline(xintercept = 250, linetype= "dashed")  + 
   geom_vline(xintercept = 500, linetype = "dashed") +  
@@ -620,7 +625,7 @@ print(ME1_Hefty)
 ```{r High Elevation Mount Evans, echo = FALSE, warning= FALSE}
 Evans_highelevation_hefty<- ggplot () + 
   geom_point(data = Mount_Evans %>% filter (Sample != "ME1_2872") %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = Sample, text = Grain), fill = 'gray60', pch=24, size=4)+ 
-  geom_errorbar(data = ME_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - CorrDate_SD, ymax = CorrDate_mean + CorrDate_SD), color = 'black', width=.1)+
+  geom_errorbar(data = ME_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data = ME_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
@@ -781,3 +786,129 @@ print(LP_reU)
 ```
 
 ### Hefty Outputs
+
+
+Just like the other two peaks, I've divided this dataset into a low elevation (<= 3500 m), and high elevation (>3500 m) groups. 
+
+
+Even eU bins - I think this makes the most sense in some ways for this distribution, because it honors 'clusters' for the most part, and evenly divides the eU space. Downside: it is not particularly similar to either of the groupings from the other peaks 
+**4 Bins:**
+*0 - 500 
+*500 - 1000  
+*1000 - 2200
+None of these options really meaningfully change the average dates or the uncertainties (either 15% or s.d.) in each resepctive bin. 
+```{r}
+grains.not.modeled <- c()
+Longs_Peak <- Longs_Peak %>%  
+  mutate( 
+    Rownumber= row_number(),
+    Donotuse = (Rownumber %in% grains.not.modeled),
+    bindata= cut(eU, c(0,500, 1000, 2500)) #these are my bin cutoffs
+  ) 
+```
+Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
+```{r, echo = FALSE}
+LP_highelevation_flatlist <- Longs_Peak %>% filter (Elevation > 3500) %>% 
+  filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize(
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      RawDate_mean =  round (mean(Raw_date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 2),
+      Rawdate_SD = round (sd(Raw_date), digits = 2),
+      mean_rs = round(mean(r), digits = 2),
+      CorrDate_mean = round(mean(Corr_Date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
+      CorrDate_SD = round (sd(Corr_Date), digits = 2),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 1),
+      )
+
+
+print(LP_highelevation_flatlist)
+write.csv(LP_highelevation_flatlist, file="data_output/Longs High Elevation Hefty Flatlist.csv")
+```
+
+```{r, echo = FALSE}
+LP_lowelevation_flatlist <- Longs_Peak %>% filter (Elevation <= 3500) %>% 
+  filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize(
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      RawDate_mean =  round (mean(Raw_date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 2),
+      Rawdate_SD = round (sd(Raw_date), digits = 2),
+      mean_rs = round(mean(r), digits = 2),
+      CorrDate_mean = round(mean(Corr_Date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
+      CorrDate_SD = round (sd(Corr_Date), digits = 2),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 1),
+      )
+print(LP_lowelevation_flatlist)
+write.csv(LP_lowelevation_flatlist, file="data_output/Longs Low Elevation Hefty Flatlist.csv")
+```
+
+```{r, include = FALSE}
+#If you need to manipulate the Pikes Peak Data more after this code chunk, you should ungroup it - but I have this line commented out, becuase I don't like that it prints all the data again 
+ungroup(Longs_Peak) 
+```
+
+```{r, echo = FALSE, warning= FALSE}
+Longs_highelevation_hefty<- ggplot () + 
+  geom_errorbar(data = LP_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
+  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation >3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data = LP_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
+  geom_vline(xintercept = 500, linetype= "dashed")  + 
+  geom_vline(xintercept = 1000, linetype = "dashed") +  
+  labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation >3500 m") +
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
+
+ggplotly(Longs_highelevation_hefty, dynamicTicks = TRUE)  
+print(Longs_highelevation_hefty)
+```
+
+```{r, echo = FALSE, warning= FALSE}
+Longs_lowelevation_hefty<- ggplot () + 
+  geom_errorbar(data = LP_lowelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
+  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation  <= 3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data = LP_lowelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
+  geom_vline(xintercept = 500, linetype= "dashed")  + 
+  geom_vline(xintercept = 1000, linetype = "dashed") +  
+  labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation <= 3500 m") +
+  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10), 
+    legend.position = "none",
+    plot.title = element_text(size = 14, hjust = 0.5))
+ggplotly(Longs_lowelevation_hefty, dynamicTicks = TRUE)  
+print(Longs_lowelevation_hefty)
+```
