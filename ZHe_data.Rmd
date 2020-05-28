@@ -183,12 +183,18 @@ We have setaparated the data into two groups for modeling - below 3500 m, and ab
 
 **Bins:**  
 * 0 - 250 ppm   (this previously was 0 - 100  + 100 - 250, but the kintetic model had a hard time with a positive Date - eU trend)
-* 250 - 500 ppm  
+* 250 - 600 ppm  This is different than before so that we don't force a positive date-eU trend from the 0 - 250, 250 - 500 bins for the high elevation model 
 * 500 - 1000 ppm  
 * 1000 - 2500 ppm  
   
   
 *Previously tried data binning methods:*  
+* 0 - 250 ppm   (this previously was 0 - 100  + 100 - 250, but the kintetic model had a hard time with a positive Date - eU trend)
+* 250 - 500 ppm  
+* 500 - 1000 ppm  
+* 1000 - 2500 ppm 
+
+
 This approach was disgarded because we decided to model the data in two groups  
 
 I have divided by data into 5 bins with roughly equal number of grains:
@@ -214,7 +220,7 @@ Pikes_Data <- Pikes_Data %>%
   mutate( 
     Rownumber= row_number(),
     Donotuse = (Rownumber %in% grains.not.modeled),
-    bindata= cut(eU, c(0, 250,500,1000,2500)) #these are my bin cutoffs
+    bindata= cut(eU, c(0, 250,600,1000,2500)) #these are my bin cutoffs
   ) 
 ```
 
@@ -311,7 +317,7 @@ Pikes_highelevation_heftyplt<- ggplot () +
   geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
   geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'green' ) +
   geom_vline(xintercept = 250, linetype = "dashed") +  
-  geom_vline(xintercept = 500,linetype="dashed")  + 
+  geom_vline(xintercept = 600,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)",  title = "Pikes Peak High Elevation Samples (>3500 m" ) +  
   scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
@@ -509,6 +515,10 @@ print (ME_reU_full)
 Here I have separated the Mount Evans data into below 3500 m, and above 3500 m. I separted it like this becuase it looks like the bottom sample (ME1) has a different date-eU trend than the other three samples. Additonally, Bryant and Naeser (1980) documented a 'roll-over' to older AFT dates at an elevation of approximatley 3500 m, and so it reasonable to expect that samples at low elevation experienced a slightly different thermal history than the high elevation samples. 
 
 **ME1 Bins:**  
+*0 - 450 ppm - we opted to combine the first two bins because we were having a hard time getting any good fits, and it was the middle bin that was hard to match
+450 - 1000 ppm 
+
+Previously: 
 *0 - 250 ppm  
 *250 - 500 ppm  
 *500 - 1000 ppm   
@@ -529,7 +539,7 @@ Bins:
 Hefty outputs for the lowest sample: 
 ```{r, echo=FALSE}
 ME1_flatlist <- Mount_Evans %>% filter (Sample == "ME1_2872") %>% 
-  mutate(bindata= cut(eU, c(0,250, 500,1000))) %>%  #these are my bin cutoffs
+  mutate(bindata= cut(eU, c(0, 450,1000))) %>%  #these are my bin cutoffs
   group_by(bindata) %>% 
     summarize( 
       U = round (mean(U, na.rm = FALSE), digits = 1),
@@ -605,8 +615,8 @@ ME1_Hefty<- ggplot () +
   geom_errorbar(data = ME1_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data = ME1_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
   geom_point(data = model_outcomes %>% filter(Peak == "Evans") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'green' ) +
-  geom_vline(xintercept = 250, linetype= "dashed")  + 
-  geom_vline(xintercept = 500, linetype = "dashed") +  
+  #geom_vline(xintercept = 250, linetype= "dashed")  + 
+  geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mount Evans < 3500 m (ME1)")  +
   scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
@@ -806,7 +816,7 @@ Even eU bins - I think this makes the most sense in some ways for this distribut
 *1000 - 2200
 None of these options really meaningfully change the average dates or the uncertainties (either 15% or s.d.) in each resepctive bin. 
 ```{r}
-grains.not.modeled <- c()
+grains.not.modeled <- c(1)
 Longs_Peak <- Longs_Peak %>%  
   mutate( 
     Rownumber= row_number(),
