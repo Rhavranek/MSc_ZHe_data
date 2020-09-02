@@ -287,7 +287,7 @@ Pikes_lowelevation_heftyplt<- ggplot () +
   geom_point(data=Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3"), aes(x=eU, y=Corr_Date, label = papername, text = Grain),  fill = 'gray60', pch=22, size=4) + 
   geom_errorbar(data = Pikes_lowelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_lowelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue')+
-  geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'magenta' ) +
+  geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 250, linetype = "dashed") +  
   geom_vline(xintercept = 500,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
@@ -315,7 +315,7 @@ Pikes_highelevation_heftyplt<- ggplot () +
   geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
   geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
-  geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'magenta' ) +
+  geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 250, linetype = "dashed") +  
   geom_vline(xintercept = 600,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
@@ -614,7 +614,7 @@ ME1_Hefty<- ggplot () +
   geom_point(data=Mount_Evans %>% filter (Sample == "ME1_2872"), aes(x=eU, y=Corr_Date, label = Sample, text = Grain, ), fill = 'gray60', pch=24, size=4) + 
   geom_errorbar(data = ME1_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data = ME1_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
-  geom_point(data = model_outcomes %>% filter(Peak == "Evans") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'magenta' ) +
+  geom_point(data = model_outcomes %>% filter(Peak == "Evans") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
   #geom_vline(xintercept = 250, linetype= "dashed")  + 
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
@@ -644,7 +644,7 @@ Evans_highelevation_hefty<- ggplot () +
   geom_point(data = Mount_Evans %>% filter (Sample != "ME1_2872") %>% filter (!Donotuse), aes(x=eU, y=Corr_Date, label = Sample, text = Grain), fill = 'gray60', pch=24, size=4)+ 
   geom_errorbar(data = ME_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data = ME_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
-  geom_point(data = model_outcomes %>% filter(Peak == "Evans") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'magenta' ) +
+  geom_point(data = model_outcomes %>% filter(Peak == "Evans") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mount Evans > 3500 m")  +
@@ -816,7 +816,7 @@ Even eU bins - I think this makes the most sense in some ways for this distribut
 *1000 - 2200
 None of these options really meaningfully change the average dates or the uncertainties (either 15% or s.d.) in each resepctive bin. 
 ```{r}
-grains.not.modeled <- c(1)
+grains.not.modeled <- c()
 Longs_Peak <- Longs_Peak %>%  
   mutate( 
     Rownumber= row_number(),
@@ -885,7 +885,7 @@ Longs_highelevation_hefty<- ggplot () +
   geom_errorbar(data = LP_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation >3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
   geom_point(data = LP_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
-  geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'green' ) +
+  geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation >3500 m") +
@@ -912,7 +912,7 @@ Longs_lowelevation_hefty<- ggplot () +
   geom_errorbar(data = LP_lowelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation  <= 3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
   geom_point(data = LP_lowelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
-  geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_age), pch =25, size = 6, fill = 'magenta' ) +
+  geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation <= 3500 m") +
