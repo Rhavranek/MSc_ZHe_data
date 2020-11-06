@@ -932,3 +932,48 @@ Longs_lowelevation_hefty<- ggplot () +
 ggplotly(Longs_lowelevation_hefty, dynamicTicks = TRUE)  
 print(Longs_lowelevation_hefty)
 ```
+
+
+# Other Plots
+```{r}
+CL_raman_comparison <- Pikes_Data %>% 
+  filter(Sample == "PP2084") %>% 
+  ggplot()+
+  geom_point(aes(eU, Corr_Date, color = Grain, label = Grain))
+
+CL_raman_comparison
+```
+
+```{r}
+date_overlap_highelevation <- Pikes_Data %>% filter(papername == "PP4" | papername == "PP5" | papername == "PP6") %>% 
+  bind_rows(
+    Mount_Evans %>% filter (Sample == "ME2_3596" | Sample == "ME3_3978" | Sample == "ME4_4345")
+  ) %>% 
+  ggplot()+
+  aes(x = eU, y = Corr_Date, shape = Peak)+
+  scale_shape_manual(values=c(15, 17)) +
+  geom_point(size = 3)+
+  labs (title = "High Elevation Samples")
+
+date_overlap_highelevation
+
+date_overlap_lowelevation <- Pikes_Data %>% filter(papername == "PP3") %>% 
+  bind_rows(
+    Mount_Evans %>% filter (Sample == "ME1_2872")
+  ) %>% 
+  ggplot()+
+  aes(x = eU, y = Corr_Date, shape = Peak)+
+  scale_shape_manual(values=c(15, 17)) +
+  geom_point(size = 3)+
+  labs (title = "Low Elevation Samples")
+
+date_overlap_lowelevation
+
+
+
+```
+
+
+
+
+
