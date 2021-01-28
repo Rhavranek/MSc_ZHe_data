@@ -918,8 +918,8 @@ print(Longs_highelevation_hefty)
 Longs_lowelevation_hefty<- ggplot () + 
   geom_errorbar(data = LP_lowelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
   geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation  <= 3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
-  geom_point(data = LP_lowelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 21, size = 6, fill = 'dodgerblue') +
-  geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =25, size = 6, fill = 'magenta' ) +
+  geom_point(data = LP_lowelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
+  geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation <= 3500 m") +
