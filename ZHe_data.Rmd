@@ -98,7 +98,7 @@ PP_DeU<-ggplot (data=Pikes_Data, aes(x=eU, y=Corr_Date)) +
   geom_vline(xintercept = 500,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Pikes Peak" ) +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic() +
   theme(
@@ -144,7 +144,7 @@ PP_grainsize_eU<-ggplot (data=Pikes_Data, aes (r, eU))+
   viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
   theme_classic()+
   scale_x_continuous(expand =c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
-  scale_y_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   labs(x="Grain size (µm)", y = "eU", title = "eU vs. Grain Size, colored by elevation") +  
   theme(
     panel.border=element_rect(fill=NA,size = 1),
@@ -294,7 +294,7 @@ Pikes_lowelevation_heftyplt<- ggplot () +
   geom_vline(xintercept = 500,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Pikes Peak Low Elevation Samples (< 3500 m)" ) +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
   theme(
@@ -322,7 +322,7 @@ Pikes_highelevation_heftyplt<- ggplot () +
   geom_vline(xintercept = 600,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)",  title = "Pikes Peak High Elevation Samples (>3500 m)" ) +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
   theme(
@@ -386,7 +386,7 @@ ME_DeU<-ggplot (data=Mount_Evans, aes(x=eU, y=Corr_Date)) +
   geom_point(aes(fill=Elevation), pch=24, size=4) +  
   viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mt. Evans" ) +  
-  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic() +
   theme(
@@ -490,7 +490,7 @@ ME_reU<-ggplot (data=Mount_Evans, aes(r, eU)) +
   geom_point(aes(fill=Elevation), pch=24, size=4) +  
   viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
   labs(x="Grain Size (µm)", y = "eU (ppm)", title = "Grain size vs. eU" ) +  
-  scale_y_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_x_continuous(expand=c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
   theme_classic() +
   theme(
@@ -624,7 +624,7 @@ ME1_Hefty<- ggplot () +
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mount Evans < 3500 m (ME1)")  +
-  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic() +
   theme(
@@ -653,7 +653,7 @@ Evans_highelevation_hefty<- ggplot () +
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mount Evans > 3500 m")  +
-  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic() +
   theme(
@@ -726,7 +726,7 @@ LP_DeU<-ggplot (data=Longs_Peak, aes(x=eU, y=Corr_Date)) +
   viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
   geom_vline(xintercept = 500, linetype = "dashed") + 
   geom_vline(xintercept = 1000, linetype = "dashed")  + 
-  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
   theme(
@@ -789,7 +789,7 @@ LP_reU<-ggplot (data=Longs_Peak, aes(r, eU)) +
   geom_point(aes(fill=Elevation), pch=23, size=4) +
   viridis::scale_fill_viridis(option = "magma", limits = c(2000,4500))+
   labs(x="Grain Size (µm)", y = "eU (ppm)", title = "Longs Peak" ) +  
-  scale_y_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_y_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_x_continuous(expand=c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
   theme_classic()+
   theme(
@@ -826,7 +826,7 @@ Longs_Peak <- Longs_Peak %>%
   mutate( 
     Rownumber= row_number(),
     Donotuse = (Rownumber %in% grains.not.modeled),
-    bindata= cut(eU, c(0,500, 1000, 2500)) #these are my bin cutoffs
+    bindata= cut(eU, c(0,500, 1000, 3200)) #these are my bin cutoffs
   ) 
 ```
 Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
@@ -837,9 +837,9 @@ LP_highelevation_flatlist <- Longs_Peak %>% filter (Elevation > 3500) %>%
     summarize(
       U = round (mean(U), digits = 1),
       Th = round (mean(Th), digits = 1),
-      RawDate_mean =  round (mean(Raw_date), digits = 2),
-      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 2),
-      Rawdate_SD = round (sd(Raw_date), digits = 2),
+      RawDate_mean =  round (mean(Uncorr_date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Uncorr_date), digits = 2),
+      Rawdate_SD = round (sd(Uncorr_date), digits = 2),
       mean_rs = round(mean(r), digits = 2),
       CorrDate_mean = round(mean(Corr_Date), digits = 2),
       CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
@@ -863,9 +863,9 @@ LP_lowelevation_flatlist <- Longs_Peak %>% filter (Elevation <= 3500) %>%
     summarize(
       U = round (mean(U), digits = 1),
       Th = round (mean(Th), digits = 1),
-      RawDate_mean =  round (mean(Raw_date), digits = 2),
-      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 2),
-      Rawdate_SD = round (sd(Raw_date), digits = 2),
+      RawDate_mean =  round (mean(Uncorr_date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Uncorr_date), digits = 2),
+      Rawdate_SD = round (sd(Uncorr_date), digits = 2),
       mean_rs = round(mean(r), digits = 2),
       CorrDate_mean = round(mean(Corr_Date), digits = 2),
       CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
@@ -896,7 +896,7 @@ Longs_highelevation_hefty<- ggplot () +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation >3500 m") +
-  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic() +
   theme(
@@ -912,6 +912,7 @@ Longs_highelevation_hefty<- ggplot () +
 
 ggplotly(Longs_highelevation_hefty, dynamicTicks = TRUE)  
 print(Longs_highelevation_hefty)
+
 ```
 
 ```{r, echo = FALSE, warning= FALSE}
@@ -923,7 +924,7 @@ Longs_lowelevation_hefty<- ggplot () +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation <= 3500 m") +
-  scale_x_continuous(expand=c(0,0), limits=c(0,2400), breaks=seq(0, 2400, 400)) + 
+  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
   scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic() +
   theme(
