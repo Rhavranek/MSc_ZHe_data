@@ -214,7 +214,7 @@ I have chosen to model all of the samples together because they form a singular 
  
 
 ```{r}
-grains.not.modeled <- c(6, 30)
+grains.not.modeled <- c(6) #,30
 
 Pikes_Data <- Pikes_Data %>%  
   mutate( 
@@ -249,7 +249,7 @@ Pikes_lowelevation_hefty <- Pikes_Data %>% filter (papername == "PP1" | papernam
       )
 
 print(Pikes_lowelevation_hefty)
-write.csv(Pikes_lowelevation_hefty , file="data_output/Pikes Low Elevation Hefty Flatlist.csv")
+#write.csv(Pikes_lowelevation_hefty , file="data_output/Pikes Low Elevation Hefty Flatlist.csv")
 
 Pikes_highelevation_hefty <- Pikes_Data %>% filter (papername != "PP1" & papername != "PP2" & papername != "PP3") %>% filter (!Donotuse) %>% 
   group_by(bindata) %>% 
@@ -272,7 +272,32 @@ Pikes_highelevation_hefty <- Pikes_Data %>% filter (papername != "PP1" & paperna
       )
 
 print(Pikes_highelevation_hefty)
-write.csv(Pikes_highelevation_hefty, file="data_output/Pikes High Elevation Hefty Flatlist.csv")
+#write.csv(Pikes_highelevation_hefty, file="data_output/Pikes High Elevation Hefty Flatlist.csv")
+
+
+#For Reveiwer #2's comments we wanted to demonstrate all of the pikes peak data modelled together:
+Pikes_all_hefty <-  Pikes_Data %>% filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize( 
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      Sm = round (mean(Sm), digits = 1),
+      RawDate_mean =  round (mean(Raw_date), digits = 1),
+      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 1),
+      Rawdate_SD = round (sd(Raw_date), digits = 1),
+      mean_rs = round(mean(r), digits = 1),
+      CorrDate_mean = round(mean(Corr_Date), digits = 1),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
+      CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 2),
+      )
+
+print(Pikes_all_hefty)
+write.csv(Pikes_all_hefty, file="data_output/Pikes ALL Elevations Hefty Flatlist.csv")
 ```
 
 ```{r, include = FALSE}
@@ -337,6 +362,43 @@ Pikes_highelevation_heftyplt<- ggplot () +
 
 ggplotly(Pikes_highelevation_heftyplt, dynamicTicks = TRUE)  
 ```
+
+Where is the misfit in the high elevation model?
+```{r}
+low_outcomes_210909 <- tibble(model_date = 651.7, eU = 144.5) %>% 
+  add_row (model_date = 424.7, eU = 422.9) %>% 
+  add_row (model_date = 165.1, eU = 749.7) %>% 
+  add_row (model_date = 70.3, eU = 1622.1)
+
+
+Pikes_highelevation_misfit<- ggplot () + 
+  geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
+  geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
+  geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
+  geom_point(data = low_outcomes_210909, aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
+  geom_vline(xintercept = 250, linetype = "dashed") +  
+  geom_vline(xintercept = 600,linetype="dashed")  + 
+  geom_vline(xintercept = 1000,linetype="dashed")  + 
+  labs(x="eU (ppm)", y = "ZHe Date (Ma)",  title = "Pikes Peak High Elevation Samples (>3500 m)" ) +  
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
+  theme(
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
+    axis.ticks = element_line(color="black"),
+    axis.line = element_line(color = NA),
+    axis.title.x = element_text(face="bold", size=12),
+    axis.title.y= element_text(face="bold", size=12),
+    legend.text = element_text(size = 10),
+    axis.text = element_text(color = "black", size = 10),
+   plot.title = element_text(size = 14, hjust = 0.5))
+
+print(Pikes_highelevation_misfit)
+```
+
+
+
+
 
 ```{r, include= FALSE}
 print(Pikes_highelevation_heftyplt)
@@ -682,28 +744,28 @@ print (Evans_highelevation_hefty)
 Longs_Peak <- read.csv("data/Longs_Peak.csv")
 
 #Rename sample to match other peak schema 
-Longs_Peak <- Longs_Peak %>% mutate (
-  papername = ifelse (Sample == "LP1", "LP7",
-                ifelse (Sample == "LP2", "LP6",
-                  ifelse (Sample == "LP3", "LP5",
-                    ifelse (Sample == "LP4", "LP4",
-                      ifelse (Sample == "LP7", "LP3",
-                          ifelse(Sample == "LP5", "LP2", "LP1")
-                      )
-                    )
-                  )
-                )
-              )
-  )
+# Longs_Peak <- Longs_Peak %>% mutate (
+#   papername = ifelse (Sample == "LP1", "LP7",
+#                 ifelse (Sample == "LP2", "LP6",
+#                   ifelse (Sample == "LP3", "LP5",
+#                     ifelse (Sample == "LP4", "LP4",
+#                       ifelse (Sample == "LP7", "LP3",
+#                           ifelse(Sample == "LP5", "LP2", "LP1")
+#                       )
+#                     )
+#                   )
+#                 )
+#               )
+#   )
 
 # Add in column with sample elevation
 Longs_Peak <- Longs_Peak %>% mutate (
-  Elevation = ifelse (Sample == "LP1", 4343,
-                ifelse (Sample == "LP2", 4121,
-                  ifelse (Sample == "LP3", 4023,
+  Elevation = ifelse (Sample == "LP7", 4343,
+                ifelse (Sample == "LP6", 4121,
+                  ifelse (Sample == "LP5", 4023,
                     ifelse (Sample == "LP4", 3688,
-                      ifelse (Sample == "LP7", 3500,
-                          ifelse(Sample == "LP5", 3383, 2835)
+                      ifelse (Sample == "LP3", 3500,
+                          ifelse(Sample == "LP2", 3383, 2835)
                       )
                     )
                   )
@@ -737,7 +799,7 @@ LP_DeU<-ggplot (data=Longs_Peak, aes(x=eU, y=Corr_Date)) +
     axis.title.y= element_text(face="bold", size=12),
     legend.text = element_text(size = 10),
     axis.text = element_text(color = "black", size = 10), 
-    legend.position = "none",
+    #legend.position = "none",
     plot.title = element_text(size = 14, hjust = 0.5))
 
 
@@ -887,10 +949,10 @@ ungroup(Longs_Peak)
 
 ### Hefty outputs
 
-```{r, echo = FALSE, warning= FALSE}
+```{r LP highelevation hefty plot, echo = FALSE, warning= FALSE}
 Longs_highelevation_hefty<- ggplot () + 
   geom_errorbar(data = LP_highelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
-  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation >3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation >3500), aes(x=eU, y=Corr_Date, label = Sample, text = Grain), fill = 'gray60', pch=22, size=4) + 
   geom_point(data = LP_highelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
   geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
@@ -918,7 +980,7 @@ print(Longs_highelevation_hefty)
 ```{r, echo = FALSE, warning= FALSE}
 Longs_lowelevation_hefty<- ggplot () + 
   geom_errorbar(data = LP_lowelevation_flatlist, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1)+
-  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation  <= 3500), aes(x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4) + 
+  geom_point(data=Longs_Peak %>% filter (!Donotuse) %>% filter (Elevation  <= 3500), aes(x=eU, y=Corr_Date, label = Sample, text = Grain), fill = 'gray60', pch=22, size=4) + 
   geom_point(data = LP_lowelevation_flatlist, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
   geom_point(data = model_outcomes %>% filter(Peak == "Longs") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
