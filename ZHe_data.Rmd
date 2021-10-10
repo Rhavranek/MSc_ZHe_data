@@ -214,7 +214,7 @@ I have chosen to model all of the samples together because they form a singular 
  
 
 ```{r}
-grains.not.modeled <- c(6) #,30
+grains.not.modeled <- c(6, 30) 
 
 Pikes_Data <- Pikes_Data %>%  
   mutate( 
@@ -311,7 +311,7 @@ This is a dynamic plot that can be zoomed in on, and if you hover over a data po
 
 ```{r, echo = FALSE, warning= FALSE}
 Pikes_lowelevation_heftyplt<- ggplot () + 
-  geom_point(data=Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3"), aes(x=eU, y=Corr_Date, label = papername, text = Grain),  fill = 'gray60', pch=22, size=4) + 
+  geom_point(data=Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3") %>% filter (!Donotuse) , aes(x=eU, y=Corr_Date, label = papername, text = Grain),  fill = 'gray60', pch=22, size=4) + 
   geom_errorbar(data = Pikes_lowelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_lowelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue')+
   geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
@@ -319,27 +319,28 @@ Pikes_lowelevation_heftyplt<- ggplot () +
   geom_vline(xintercept = 500,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Pikes Peak Low Elevation Samples (< 3500 m)" ) +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 800)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
   theme(
    panel.border = element_rect(fill=NA, colour = "black", size = 1),
     axis.ticks = element_line(color="black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face="bold", size=24),
+    axis.title.y= element_text(face="bold", size=24),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 16),
    plot.title = element_text(size = 14, hjust = 0.5))
 
 ggplotly(Pikes_lowelevation_heftyplt, dynamicTicks = TRUE)  
+print(Pikes_lowelevation_heftyplt)
 ```
 
 
 This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is
 ```{r, echo = FALSE, warning= FALSE}
 Pikes_highelevation_heftyplt<- ggplot () + 
-  geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
+  geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3") %>% filter (!Donotuse) , aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
   geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
   geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
@@ -347,23 +348,25 @@ Pikes_highelevation_heftyplt<- ggplot () +
   geom_vline(xintercept = 600,linetype="dashed")  + 
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)",  title = "Pikes Peak High Elevation Samples (>3500 m)" ) +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 800)) + 
   scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
   theme_classic()+
   theme(
    panel.border = element_rect(fill=NA, colour = "black", size = 1),
     axis.ticks = element_line(color="black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face="bold", size=24),
+    axis.title.y= element_text(face="bold", size=24),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 16),
    plot.title = element_text(size = 14, hjust = 0.5))
 
 ggplotly(Pikes_highelevation_heftyplt, dynamicTicks = TRUE)  
+print(Pikes_highelevation_heftyplt)
 ```
 
-Where is the misfit in the high elevation model?
+#### Where is the misfit in the high elevation model?
+As a part of the revision process we were having trouble getting fits on the high elevation data set so here I plotted the outcomes of the low elevation model (where we got lots of fits) onto the high elevation dataset. From this we decided its probably the rigidity of the 3rd and 4th bins. So, we boosted the uncertainty on those bins. 
 ```{r}
 low_outcomes_210909 <- tibble(model_date = 651.7, eU = 144.5) %>% 
   add_row (model_date = 424.7, eU = 422.9) %>% 
@@ -395,9 +398,6 @@ Pikes_highelevation_misfit<- ggplot () +
 
 print(Pikes_highelevation_misfit)
 ```
-
-
-
 
 
 ```{r, include= FALSE}
