@@ -28,7 +28,6 @@ model_outcomes <- read.csv ("data/Model_outcomes.csv")
 
 
 # Pikes Peak 
-
 ### Load and Manipulate Data
 ```{r}
 Pikes_Data <- read.csv("data/Pikes_Data_for_R .csv")
@@ -399,7 +398,6 @@ Pikes_highelevation_misfit<- ggplot () +
 print(Pikes_highelevation_misfit)
 ```
 
-
 ```{r, include= FALSE}
 print(Pikes_highelevation_heftyplt)
 print(Pikes_lowelevation_heftyplt)
@@ -686,19 +684,18 @@ ME1_Hefty<- ggplot () +
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mount Evans < 3500 m (ME1)")  +
-  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
-  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
-  theme_classic() +
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 800)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
   theme(
-    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
     axis.ticks = element_line(color="black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face="bold", size=24),
+    axis.title.y= element_text(face="bold", size=24),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10), 
-    legend.position = "none",
-    plot.title = element_text(size = 14, hjust = 0.5))
+    axis.text = element_text(color = "black", size = 16),
+   plot.title = element_text(size = 14, hjust = 0.5))
 
 
 ggplotly(ME1_Hefty, dynamicTicks = TRUE)  
@@ -715,26 +712,22 @@ Evans_highelevation_hefty<- ggplot () +
   geom_vline(xintercept = 450, linetype = "dashed") +  
   geom_vline(xintercept = 1000,linetype="dashed")  + 
   labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Mount Evans > 3500 m")  +
-  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
-  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
-  theme_classic() +
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 800)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
   theme(
-    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
     axis.ticks = element_line(color="black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face="bold", size=24),
+    axis.title.y= element_text(face="bold", size=24),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10), 
-    legend.position = "none",
-    plot.title = element_text(size = 14, hjust = 0.5))
+    axis.text = element_text(color = "black", size = 16),
+   plot.title = element_text(size = 14, hjust = 0.5))
 
 ggplotly(Evans_highelevation_hefty, dynamicTicks = TRUE)
 print (Evans_highelevation_hefty)
 ```
-
-
-
 
 
 
@@ -870,7 +863,7 @@ print(LP_reU)
 
 ```
 
-### Hefty Outputs
+### Hefty Inputs
 
 
 Just like the other two peaks, I've divided this dataset into a low elevation (<= 3500 m), and high elevation (>3500 m) groups. 
@@ -942,6 +935,31 @@ print(LP_lowelevation_flatlist)
 write.csv(LP_lowelevation_flatlist, file="data_output/Longs Low Elevation Hefty Flatlist.csv")
 ```
 
+```{r, echo = FALSE}
+LP_allelevations_flatlist <- Longs_Peak %>% 
+  filter (!Donotuse) %>% 
+  group_by(bindata) %>% 
+    summarize(
+      U = round (mean(U), digits = 1),
+      Th = round (mean(Th), digits = 1),
+      RawDate_mean =  round (mean(Uncorr_date), digits = 2),
+      Rawdate_15percent = round (0.15*mean(Uncorr_date), digits = 2),
+      Rawdate_SD = round (sd(Uncorr_date), digits = 2),
+      mean_rs = round(mean(r), digits = 2),
+      CorrDate_mean = round(mean(Corr_Date), digits = 2),
+      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 2),
+      CorrDate_SD = round (sd(Corr_Date), digits = 2),
+      model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
+      N = n(),
+      eU = round (mean(eU), digits = 1),
+      He = round (mean(He), digits = 1),
+      FT = round (mean(FT), digits = 1),
+      )
+print(LP_allelevation_flatlist)
+write.csv(LP_allelevations_flatlist, file="data_output/Longs all Elevation Hefty Flatlist.csv")
+```
+
+
 ```{r, include = FALSE}
 #If you need to manipulate the Pikes Peak Data more after this code chunk, you should ungroup it - but I have this line commented out, becuase I don't like that it prints all the data again 
 ungroup(Longs_Peak) 
@@ -958,19 +976,18 @@ Longs_highelevation_hefty<- ggplot () +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation >3500 m") +
-  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
-  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
-  theme_classic() +
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 800)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
   theme(
-    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
     axis.ticks = element_line(color="black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face="bold", size=24),
+    axis.title.y= element_text(face="bold", size=24),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10), 
-    legend.position = "none",
-    plot.title = element_text(size = 14, hjust = 0.5))
+    axis.text = element_text(color = "black", size = 16),
+   plot.title = element_text(size = 14, hjust = 0.5))
 
 ggplotly(Longs_highelevation_hefty, dynamicTicks = TRUE)  
 print(Longs_highelevation_hefty)
@@ -986,19 +1003,19 @@ Longs_lowelevation_hefty<- ggplot () +
   geom_vline(xintercept = 500, linetype= "dashed")  + 
   geom_vline(xintercept = 1000, linetype = "dashed") +  
   labs(x="eU (ppm)", y = "Date (Ma)", title= "Longs Peak, elevation <= 3500 m") +
-  scale_x_continuous(expand=c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
-  scale_y_continuous(expand=c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
-  theme_classic() +
+  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 800)) + 
+  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+  theme_classic()+
   theme(
-    panel.border = element_rect(fill=NA, colour = "black", size = 1),
+   panel.border = element_rect(fill=NA, colour = "black", size = 1),
     axis.ticks = element_line(color="black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face="bold", size=24),
+    axis.title.y= element_text(face="bold", size=24),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10), 
-    legend.position = "none",
-    plot.title = element_text(size = 14, hjust = 0.5))
+    axis.text = element_text(color = "black", size = 16),
+   plot.title = element_text(size = 14, hjust = 0.5))
+
 ggplotly(Longs_lowelevation_hefty, dynamicTicks = TRUE)  
 print(Longs_lowelevation_hefty)
 ```
