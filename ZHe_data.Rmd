@@ -9,44 +9,47 @@ output:
 ---
 ```{r setup, echo = FALSE, message=FALSE, warning=FALSE}
 # load libraries
-library(tidyverse) 
+library(tidyverse)
 library(latex2exp)
-library (plotly)
+library(plotly)
+library(lintr)
 
 # global knitting options for automatic saving of all plots as .png and .pdf
 knitr::opts_chunk$set(
   dev = c("png", "pdf"), fig.keep = "all",
-  dev.args = list(pdf = list(encoding = "WinAnsi", useDingbats = FALSE)),
-  fig.path = file.path("fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_"))
+  dev.args = list(
+    pdf = list(encoding = "WinAnsi", useDingbats = FALSE)
+    ),
+  fig.path = file.path(
+    "fig_output", paste0(gsub("\\.[Rr]md", "", knitr::current_input()), "_")
+    )
 )
 ```
 
 ```{r Universal data}
-AFT_data <- read.csv("data/AFT_Data.csv")
-model_outcomes <- read.csv ("data/Model_outcomes.csv")
+aft_data <- read.csv("data/AFT_Data.csv")
+model_outcomes <- read.csv("data/Model_outcomes.csv")
 ```
 
 
 # Pikes Peak 
 ### Load and Manipulate Data
+In this chunk I modify the sample names, for ease of reading, where PP still stands for Pikes Peak, and they are numbered 1 - 6 with the lowest elevation sample being 1 and highest elevation sample being 6. To do that I use nested if/else statements. In the first line I, I ask is the sample PP2084?, if true, add in information to the column named papername and call that sample PP1, else move onto the next sample. That goes down the list until the last until PP5, where the only sample left is PP6. 
 ```{r}
-Pikes_Data <- read.csv("data/Pikes_Data_for_R .csv")
-
-#Modify the sample names, for ease of reading, where PP still stands for Pikes Peak, and they are numbered 1 - 6 with the lowest elevation sample being 1 and highest elevation sample being 6 
-Pikes_Data <- Pikes_Data %>% 
-    mutate (papername = 
-              ifelse(Sample == "PP2084", "PP1", #If True, add label PP2
-                ifelse( Sample == "PP2479", "PP2", #If True, add label PP2
-                  ifelse (Sample == "PP2907", "PP3", #If true, add label PP3
-                    ifelse (Sample == "PP3597", "PP4", #If true, add label PP4
-                      ifelse (Sample == "PP3971", "PP5", "PP6")     #if true, add label PP5, ELSE add the label PP6
-                    )      
+pikes_data <- read.csv("data/Pikes_Data_for_R .csv")
+pikes_data <- pikes_data %>%
+    mutate(papername =
+              ifelse(Sample == "PP2084", "PP1", #If True, add label PP1
+                ifelse(Sample == "PP2479", "PP2",
+                  ifelse(Sample == "PP2907", "PP3",
+                    ifelse(Sample == "PP3597", "PP4",
+                      ifelse(Sample == "PP3971", "PP5", "PP6")
+                    )
                   )
                 )
               )
     )
-
-Pikes_Data <- Pikes_Data %>% mutate(Peak = "Pikes Peak")
+pikes_data <- pikes_data %>% mutate(Peak = "Pikes Peak")
 ```
 
 ### Plots
@@ -61,101 +64,163 @@ This section makes plots for:
 4. Pikes Peak date vs. grain size   
 3. Pikes Peak AFT data (Kelley and Chapin, 2004)  
 ```{r Pikes Plots, echo=FALSE}
-#Elevation vs. Date with each point colored by eU 
-PP_ED_byeU<-ggplot (data=Pikes_Data, aes(Corr_Date, Elevation))+
-  geom_errorbarh(aes(xmin=Corr_Date-Corr_date_unc, xmax=Corr_Date+Corr_date_unc), color = 'black', height=0)+
-  geom_point(aes(fill=eU), shape=22, size=4)+
-  viridis::scale_fill_viridis(option = "viridis", limits = c(0,2000))+
-  geom_point(data=AFT_data %>% filter (Peak == "Pikes Peak"), aes(AFT_date, Elevation), pch=15, size=4)+
-  theme_classic()+
-  labs(x="ZHe Date (Ma)", y = "Elevation (m)", title = "Pikes Peak") +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
-  scale_y_continuous(expand =c(0,0), limits = c(2000,4500), breaks=seq(2000, 4500, 500))+
+#Elevation vs. Date with each point colored by eU
+pp_ed_by_eu <- ggplot(data = pikes_data, aes(Corr_Date, Elevation)) +
+  geom_errorbarh(aes(
+    xmin = Corr_Date - Corr_date_unc,
+    xmax = Corr_Date + Corr_date_unc),
+    color = "black",
+    height = 0) +
+  geom_point(aes(fill = eU),
+    shape = 22, size = 4) +
+  viridis::scale_fill_viridis(option = "viridis", limits = c(0, 2000)) +
+  geom_point(
+    data = aft_data %>% filter(Peak == "Pikes Peak"),
+    aes(aft_date, Elevation), pch = 15, size = 4) +
+  theme_classic() +
+  labs(x = "ZHe Date (Ma)", y = "Elevation (m)", title = "Pikes Peak") +
+  scale_x_continuous(
+    expand = c(0, 0),
+    limits = c(0, 800),
+    breaks = seq(0, 800, 200)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(2000, 4500),
+    breaks = seq(2000, 4500, 500)) +
   theme(
-   panel.border = element_rect(fill=NA, colour = "black", size = 1),
-    axis.ticks = element_line(color="black"),
+   panel.border = element_rect(fill = NA, colour = "black", size = 1),
+    axis.ticks = element_line(color = "black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face = "bold", size = 12),
+    axis.title.y = element_text(face = "bold", size = 12),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10), 
+    axis.text = element_text(color = "black", size = 10),
     #legend.position = c(.9, 0.4),
-    plot.title = element_text(size = 14, hjust = 0.5))+
-  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+    plot.title = element_text(size = 14, hjust = 0.5)) +
+  guides(linetype = guide_legend(
+    label.hjust = 0, label.vjust = 0.5, keyheight = 2)
+    )
 
-print ("Excludes bottom two AFT samples at 1777m and 1866m")
-print(PP_ED_byeU)
+print("Excludes bottom two AFT samples at 1777m and 1866m")
+print(pp_ed_by_eu)
 
 #Date - eU plot
-PP_DeU<-ggplot (data=Pikes_Data, aes(x=eU, y=Corr_Date)) +  
-  geom_errorbar(aes(ymin=Corr_Date-Corr_date_unc, ymax=Corr_Date+Corr_date_unc), color = 'black', width=.1) + 
-  geom_errorbarh(aes(xmin=eU-eU_unc, xmax=eU+eU_unc)) +
-  geom_point(aes(fill=Elevation), pch=22, size=4) +  
-  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
-  geom_vline(xintercept = 100, linetype= "dashed")  + 
-  geom_vline(xintercept = 250, linetype = "dashed") +  
-  geom_vline(xintercept = 500,linetype="dashed")  + 
-  geom_vline(xintercept = 1000,linetype="dashed")  + 
-  labs(x="eU (ppm)", y = "ZHe Date (Ma)", title = "Pikes Peak" ) +  
-  scale_x_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
-  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
+pp_deu <- ggplot(data = pikes_data, aes(x = eU, y = Corr_Date)) +
+  geom_errorbar(aes(
+    ymin = Corr_Date - Corr_date_unc,
+    ymax = Corr_Date + Corr_date_unc),
+    color = "black", width = .1) +
+  geom_errorbarh(aes(
+    xmin = eU - eU_unc,
+    xmax = eU + eU_unc)) +
+  geom_point(aes(
+    fill = Elevation),
+    pch = 22, size = 4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500)) +
+  geom_vline(xintercept = 100, linetype = "dashed") +
+  geom_vline(xintercept = 250, linetype = "dashed") +
+  geom_vline(xintercept = 500, linetype = "dashed")  +
+  geom_vline(xintercept = 1000, linetype = "dashed")  +
+  labs(
+    x = "eU (ppm)",
+    y = "ZHe Date (Ma)",
+    title = "Pikes Peak") +
+  scale_x_continuous(
+    expand = c(0, 0),
+    limits = c(0, 3200),
+    breaks = seq(0, 3200, 400)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, 800),
+    breaks = seq(0, 800, 200)) +
   theme_classic() +
   theme(
-    panel.border = element_rect(fill=NA, colour = "black", size = 1),
-    axis.ticks = element_line(color="black"),
+    panel.border = element_rect(fill = NA, colour = "black", size = 1),
+    axis.ticks = element_line(color = "black"),
     axis.line = element_line(color = NA),
-    axis.title.x = element_text(face="bold", size=12),
-    axis.title.y= element_text(face="bold", size=12),
+    axis.title.x = element_text(face = "bold", size = 12),
+    axis.title.y = element_text(face = "bold", size = 12),
     legend.text = element_text(size = 10),
-    axis.text = element_text(color = "black", size = 10), 
-    plot.title = element_text(size = 14, hjust = 0.5))+
-  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))
+    axis.text = element_text(color = "black", size = 10),
+    plot.title = element_text(size = 14, hjust = 0.5)) +
+  guides(linetype = guide_legend(
+    label.hjust = 0, label.vjust = 0.5, keyheight = 2))
 
-print(PP_DeU)
+print(pp_deu)
 
 
 
-#Grain size w/ color as Elevation 
-PP_grainsize_elev<-ggplot (data=Pikes_Data, aes(r, Corr_Date))+
-  geom_errorbar(aes(ymin=Corr_Date-Corr_date_unc, ymax=Corr_Date+Corr_date_unc), color = 'black', width=.1) + 
-  geom_point (aes(fill=Elevation), shape=22, size =4)+
-  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
-  theme_classic()+
-  scale_y_continuous(expand =c(0,0), limits = c(0,800), breaks=seq(0, 800, 200)) +
-  scale_x_continuous(expand =c(0,0), limits=c(0,140), breaks=seq(0, 140, 30)) + 
-  labs(x="Grain Size", y = "Date", title = "Date vs. Grain Size, colored by elevation") +  
+#Grain size w/ color as Elevation
+pp_grainsize_elev <- ggplot(data = pikes_data, aes(r, Corr_Date)) +
+  geom_errorbar(aes(
+    ymin = Corr_Date - Corr_date_unc,
+    ymax = Corr_Date + Corr_date_unc),
+    color = "black", width = .1) +
+  geom_point(aes(
+    fill = Elevation),
+    shape = 22, size = 4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500)) +
+  theme_classic() +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, 800),
+    breaks = seq(0, 800, 200)) +
+  scale_x_continuous(
+    expand = c(0, 0),
+    limits = c(0, 140),
+    breaks = seq(0, 140, 30)) +
+  labs(
+    x = "Grain Size",
+    y = "Date",
+    title = "Date vs. Grain Size, colored by elevation") +
   theme(
-    panel.border=element_rect(fill=NA, size = 1),
+    panel.border = element_rect(fill = NA, size = 1),
     text = element_text(size = 12),
     legend.position = "none",
-    axis.ticks = element_line(color="black"),
+    axis.ticks = element_line(color = "black"),
     axis.line = element_line(color = NA),
     axis.text = element_text(color = "black", size = 12)) +
-  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight =2))+
+  guides(linetype = guide_legend(
+    label.hjust = 0, label.vjust = 0.5, keyheight = 2)) +
   theme(plot.title = element_text(size = 14, hjust = 0.5))
 
-print(PP_grainsize_elev)
+print(pp_grainsize_elev)
 
-#Grain size vs. eU 
-PP_grainsize_eU<-ggplot (data=Pikes_Data, aes (r, eU))+
-  geom_errorbar(aes(ymin=eU-eU_unc, ymax=eU+eU_unc)) +
-  geom_point (aes(fill=Elevation), shape=22, size=4)+
-  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500))+
-  theme_classic()+
-  scale_x_continuous(expand =c(0,0), limits = c(0,140), breaks=seq(0, 140, 30)) +
-  scale_y_continuous(expand =c(0,0), limits=c(0,3200), breaks=seq(0, 3200, 400)) + 
-  labs(x="Grain size (µm)", y = "eU", title = "eU vs. Grain Size, colored by elevation") +  
+#Grain size vs. eU
+pp_grainsize_eu <- ggplot(data = pikes_data, aes(r, eU)) +
+  geom_errorbar(aes(
+    ymin = eU - eU_unc,
+    ymax = eU + eU_unc)) +
+  geom_point(aes(
+    fill = Elevation),
+    shape = 22, size = 4) +
+  viridis::scale_fill_viridis(option = "magma", limits = c(2000, 4500)) +
+  theme_classic() +
+  scale_x_continuous(
+    expand = c(0, 0),
+    limits = c(0, 140),
+    breaks = seq(0, 140, 30)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, 3200),
+    breaks = seq(0, 3200, 400)) +
+  labs(
+    x = "Grain size (µm)",
+    y = "eU",
+    title = "eU vs. Grain Size, colored by elevation") +
   theme(
-    panel.border=element_rect(fill=NA,size = 1),
+    panel.border = element_rect(fill = NA, size = 1),
     text = element_text(size = 12),
-    legend.position = "none", 
-    axis.ticks = element_line(color="black"),
+    legend.position = "none",
+    axis.ticks = element_line(color = "black"),
     axis.line = element_line(color = NA),
     axis.text = element_text(color = "black", size = 12)) +
-  guides(linetype = guide_legend(label.hjust = 0, label.vjust = 0.5, keyheight = 2))+
-  theme(plot.title = element_text(size = 14, hjust = 0.5))
+  guides(linetype = guide_legend(
+    label.hjust = 0, label.vjust = 0.5, keyheight = 2)) +
+  theme(plot.title = element_text(
+    size = 14, hjust = 0.5))
 
-print(PP_grainsize_eU)
+print(pp_grainsize_eU)
 
 # #AFT data
 # PPAFT<-ggplot(data=Pikes_AFT, aes(x=AFT_date, y=Elevation))+
@@ -213,95 +278,99 @@ I have chosen to model all of the samples together because they form a singular 
  
 
 ```{r}
-grains.not.modeled <- c(6, 30) 
+grains_not_modeled <- c(6, 30)
 
-Pikes_Data <- Pikes_Data %>%  
+pikes_data <- pikes_data %>%
   mutate( 
-    Rownumber= row_number(),
-    Donotuse = (Rownumber %in% grains.not.modeled),
-    bindata= cut(eU, c(0, 250,600,1000,2500)) #these are my bin cutoffs
-  ) 
+    Rownumber = row_number(),
+    Donotuse = (Rownumber %in% grains_not_modeled),
+    bindata = cut(eU, c(0, 250, 600, 1000, 2500))) #these are my bin cutoff
+
 ```
 
 Here I calculate the parapmeters I will need for my hefty model input. This automatically saves to a CSV in my data_output folder, and can be easily accessed and shared 
 
 
 ```{r, echo = FALSE}
-Pikes_lowelevation_hefty <- Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3") %>% filter (!Donotuse) %>% 
-  group_by(bindata) %>% 
-    summarize( 
-      U = round (mean(U), digits = 1),
-      Th = round (mean(Th), digits = 1),
-      Sm = round (mean(Sm), digits = 1),
-      RawDate_mean =  round (mean(Raw_date), digits = 1),
-      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 1),
-      Rawdate_SD = round (sd(Raw_date), digits = 1),
+pikes_lowelevation_hefty <- pikes_data %>%
+  filter(papername == "PP1" | papername == "PP2" | papername == "PP3") %>%
+    filter(!Donotuse) %>%
+      group_by(bindata) %>%
+    summarize(
+      U = round(mean(U), digits = 1),
+      Th = round(mean(Th), digits = 1),
+      Sm = round(mean(Sm), digits = 1),
+      RawDate_mean =  round(mean(Raw_date), digits = 1),
+      Rawdate_15percent = round(0.15 * mean(Raw_date), digits = 1),
+      Rawdate_SD = round(sd(Raw_date), digits = 1),
       mean_rs = round(mean(r), digits = 1),
       CorrDate_mean = round(mean(Corr_Date), digits = 1),
-      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
-      CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      CorrDate_15percent = round(0.15 * mean(Corr_Date), digits = 1),
+      CorrDate_SD = round(sd(Corr_Date), digits = 1),
       model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
-      eU = round (mean(eU), digits = 1),
-      He = round (mean(He), digits = 1),
-      FT = round (mean(FT), digits = 2),
-      )
+      eU = round(mean(eU), digits = 1),
+      He = round(mean(He), digits = 1),
+      FT = round(mean(FT), digits = 2))
 
-print(Pikes_lowelevation_hefty)
-#write.csv(Pikes_lowelevation_hefty , file="data_output/Pikes Low Elevation Hefty Flatlist.csv")
+print(pikes_lowelevation_hefty)
+#write.csv(pikes_lowelevation_hefty , file="data_output/Pikes Low Elevation Hefty Flatlist.csv")
 
-Pikes_highelevation_hefty <- Pikes_Data %>% filter (papername != "PP1" & papername != "PP2" & papername != "PP3") %>% filter (!Donotuse) %>% 
-  group_by(bindata) %>% 
-    summarize( 
-      U = round (mean(U), digits = 1),
-      Th = round (mean(Th), digits = 1),
-      Sm = round (mean(Sm), digits = 1),
-      RawDate_mean =  round (mean(Raw_date), digits = 1),
-      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 1),
-      Rawdate_SD = round (sd(Raw_date), digits = 1),
+pikes_highelevation_hefty <- pikes_data %>%
+  filter(papername != "PP1" & papername != "PP2" & papername != "PP3") %>%
+    filter(!Donotuse) %>%
+      group_by(bindata) %>%
+    summarize(
+      U = round(mean(U), digits = 1),
+      Th = round(mean(Th), digits = 1),
+      Sm = round(mean(Sm), digits = 1),
+      RawDate_mean =  round(mean(Raw_date), digits = 1),
+      Rawdate_15percent = round(0.15 * mean(Raw_date), digits = 1),
+      Rawdate_SD = round(sd(Raw_date), digits = 1),
       mean_rs = round(mean(r), digits = 1),
       CorrDate_mean = round(mean(Corr_Date), digits = 1),
-      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
-      CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      CorrDate_15percent = round(0.15 * mean(Corr_Date), digits = 1),
+      CorrDate_SD = round(sd(Corr_Date), digits = 1),
       model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
-      eU = round (mean(eU), digits = 1),
-      He = round (mean(He), digits = 1),
-      FT = round (mean(FT), digits = 2),
+      eU = round(mean(eU), digits = 1),
+      He = round(mean(He), digits = 1),
+      FT = round(mean(FT), digits = 2),
       )
 
-print(Pikes_highelevation_hefty)
+print(pikes_highelevation_hefty)
 #write.csv(Pikes_highelevation_hefty, file="data_output/Pikes High Elevation Hefty Flatlist.csv")
 
 
 #For Reveiwer #2's comments we wanted to demonstrate all of the pikes peak data modelled together:
-Pikes_all_hefty <-  Pikes_Data %>% filter (!Donotuse) %>% 
-  group_by(bindata) %>% 
-    summarize( 
-      U = round (mean(U), digits = 1),
-      Th = round (mean(Th), digits = 1),
-      Sm = round (mean(Sm), digits = 1),
-      RawDate_mean =  round (mean(Raw_date), digits = 1),
-      Rawdate_15percent = round (0.15*mean(Raw_date), digits = 1),
-      Rawdate_SD = round (sd(Raw_date), digits = 1),
+pikes_all_hefty <-  pikes_data %>%
+  filter(!Donotuse) %>%
+  group_by(bindata) %>%
+    summarize(
+      U = round(mean(U), digits = 1),
+      Th = round(mean(Th), digits = 1),
+      Sm = round(mean(Sm), digits = 1),
+      RawDate_mean =  round(mean(Raw_date), digits = 1),
+      Rawdate_15percent = round(0.15 * mean(Raw_date), digits = 1),
+      Rawdate_SD = round(sd(Raw_date), digits = 1),
       mean_rs = round(mean(r), digits = 1),
       CorrDate_mean = round(mean(Corr_Date), digits = 1),
-      CorrDate_15percent = round(0.15*mean(Corr_Date),digits = 1),
-      CorrDate_SD = round (sd(Corr_Date), digits = 1),
+      CorrDate_15percent = round(0.15 * mean(Corr_Date), digits = 1),
+      CorrDate_SD = round(sd(Corr_Date), digits = 1),
       model_uncertainty = pmax(CorrDate_15percent, CorrDate_SD, na.rm = TRUE),
       N = n(),
-      eU = round (mean(eU), digits = 1),
-      He = round (mean(He), digits = 1),
-      FT = round (mean(FT), digits = 2),
-      )
+      eU = round(mean(eU), digits = 1),
+      He = round(mean(He), digits = 1),
+      FT = round(mean(FT), digits = 2))
 
-print(Pikes_all_hefty)
-write.csv(Pikes_all_hefty, file="data_output/Pikes ALL Elevations Hefty Flatlist.csv")
+
+print(pikes_all_hefty)
+#write.csv(Pikes_all_hefty, file="data_output/Pikes ALL Elevations Hefty Flatlist.csv")
 ```
 
 ```{r, include = FALSE}
 #If you need to manipulate the Pikes Peak Data more after this code chunk, you should ungroup it - but I have this line commented out, becuase I don't like that it prints all the data again 
-ungroup(Pikes_Data) 
+ungroup(pikes_data) 
 ```
 
 ### Hefty Output plots
@@ -310,7 +379,7 @@ This is a dynamic plot that can be zoomed in on, and if you hover over a data po
 
 ```{r, echo = FALSE, warning= FALSE}
 Pikes_lowelevation_heftyplt<- ggplot () + 
-  geom_point(data=Pikes_Data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3") %>% filter (!Donotuse) , aes(x=eU, y=Corr_Date, label = papername, text = Grain),  fill = 'gray60', pch=22, size=4) + 
+  geom_point(data=pikes_data %>% filter (papername == "PP1" | papername == "PP2" | papername == "PP3") %>% filter (!Donotuse) , aes(x=eU, y=Corr_Date, label = papername, text = Grain),  fill = 'gray60', pch=22, size=4) + 
   geom_errorbar(data = Pikes_lowelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_lowelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue')+
   geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "LOW"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
@@ -339,7 +408,7 @@ print(Pikes_lowelevation_heftyplt)
 This is a dynamic plot that can be zoomed in on, and if you hover over a data point, you can see what grain it is
 ```{r, echo = FALSE, warning= FALSE}
 Pikes_highelevation_heftyplt<- ggplot () + 
-  geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3") %>% filter (!Donotuse) , aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
+  geom_point(data=pikes_data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3") %>% filter (!Donotuse) , aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
   geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
   geom_point(data = model_outcomes %>% filter(Peak == "Pikes") %>% filter(data_subset == "HIGH"), aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
@@ -374,7 +443,7 @@ low_outcomes_210909 <- tibble(model_date = 651.7, eU = 144.5) %>%
 
 
 Pikes_highelevation_misfit<- ggplot () + 
-  geom_point(data=Pikes_Data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
+  geom_point(data=pikes_data %>%  filter (papername != "PP1" & papername != "PP2" & papername != "PP3"), aes( x=eU, y=Corr_Date, label = papername, text = Grain), fill = 'gray60', pch=22, size=4, ) + 
   geom_errorbar(data = Pikes_highelevation_hefty, aes(x=eU, ymin = CorrDate_mean - model_uncertainty, ymax = CorrDate_mean + model_uncertainty), color = 'black', width=.1) +
   geom_point(data = Pikes_highelevation_hefty, aes(x = eU, y = CorrDate_mean), pch = 25, size = 6, fill = 'dodgerblue') +
   geom_point(data = low_outcomes_210909, aes(x = eU, y=model_date), pch =21, size = 6, fill = 'magenta' ) +
@@ -487,7 +556,7 @@ ME_ED_byeU<-ggplot (data=Mount_Evans, aes(Corr_Date, Elevation))+
   geom_errorbarh(aes(xmin=Corr_Date-Corr_date_unc, xmax=Corr_Date+Corr_date_unc), color = 'black', height=0)+
   geom_point(aes(fill=eU), shape=24, size=3)+
   viridis::scale_fill_viridis(option = "viridis", limits=c(0,2000))+
-  geom_point(data=AFT_data %>% filter (Peak == "Mount Evans"), aes(AFT_date, Elevation), pch=17, size=3)+
+  geom_point(data=aft_data %>% filter (Peak == "Mount Evans"), aes(aft_date, Elevation), pch=17, size=3)+
   theme_classic()+
   labs(x="ZHe Date (Ma)", y = "Elevation (m)", title = "Mount Evans") +  
   scale_x_continuous(expand =c(0,0), limits=c(0,800), breaks=seq(0, 800, 200)) + 
@@ -799,7 +868,7 @@ LP_DeU<-ggplot (data=Longs_Peak, aes(x=eU, y=Corr_Date)) +
 # Longs Peak Elevation vs. Date, colored by eU 
 
 LP_ED_byeU<-ggplot(data=Longs_Peak, aes(Corr_Date, Elevation))+
-  geom_point(data=AFT_data %>% filter (Peak == "Longs Peak "), aes(AFT_date, Elevation), pch=18, size=6)+
+  geom_point(data=aft_data %>% filter (Peak == "Longs Peak "), aes(aft_date, Elevation), pch=18, size=6)+
   geom_errorbarh(aes(xmin=Corr_Date-Corr_date_unc, xmax=Corr_Date+Corr_date_unc), color = 'black', height=0)+
   geom_point(aes(fill=eU), shape=23, size=4)+
   viridis::scale_fill_viridis(option = "viridis", limits=c(0,2000))+
@@ -1023,7 +1092,7 @@ print(Longs_lowelevation_hefty)
 
 # Other Plots
 ```{r}
-CL_raman_comparison <- Pikes_Data %>% 
+CL_raman_comparison <- pikes_data %>% 
   filter(Sample == "PP2084") %>% 
   ggplot()+
   geom_point(aes(eU, Corr_Date, color = Grain, label = Grain))
@@ -1032,7 +1101,7 @@ CL_raman_comparison
 ```
 
 ```{r}
-date_overlap_highelevation <- Pikes_Data %>% filter(papername == "PP4" | papername == "PP5" | papername == "PP6") %>% 
+date_overlap_highelevation <- pikes_data %>% filter(papername == "PP4" | papername == "PP5" | papername == "PP6") %>% 
   bind_rows(
     Mount_Evans %>% filter (Sample == "ME2_3596" | Sample == "ME3_3978" | Sample == "ME4_4345")
   ) %>% 
@@ -1044,7 +1113,7 @@ date_overlap_highelevation <- Pikes_Data %>% filter(papername == "PP4" | paperna
 
 date_overlap_highelevation
 
-date_overlap_lowelevation <- Pikes_Data %>% filter(papername == "PP3") %>% 
+date_overlap_lowelevation <- pikes_data %>% filter(papername == "PP3") %>% 
   bind_rows(
     Mount_Evans %>% filter (Sample == "ME1_2872")
   ) %>% 
